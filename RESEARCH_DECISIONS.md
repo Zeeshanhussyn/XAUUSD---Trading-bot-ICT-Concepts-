@@ -7,11 +7,11 @@ changed retroactively — new decisions are appended, old ones are never silentl
 
 **Decision:** Permanent project storage = local folder on user's Windows desktop
 (`Desktop\XAUUSD_Research`), synced from the cloud research sandbox after each meaningful
-checkpoint, PLUS a GitHub remote (private repo) once the user provides repo details and a
-scoped Personal Access Token.
+checkpoint, PLUS a GitHub remote (private repo).
 **Why:** The cloud sandbox this session runs in is ephemeral (can be reclaimed after inactivity).
 A multi-week/month research project needs durable storage outside any single session.
-**Status:** Local folder connected and in use. GitHub remote: pending user input.
+**Status:** Both connected. Local folder in use. GitHub remote `Zeeshanhussyn/XAUUSD---Trading-bot-ICT-Concepts-`
+connected and WP1 scaffold pushed to `main` (2026-08-24).
 
 **Decision:** Model selection is chosen per work package between Claude Sonnet 5 and Claude
 Opus 5 only (no Haiku), per explicit user preference — user will pick which one to actually use

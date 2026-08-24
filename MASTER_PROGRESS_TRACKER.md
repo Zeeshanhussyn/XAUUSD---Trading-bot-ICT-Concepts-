@@ -13,7 +13,7 @@ no MQL5, no product/dashboard in Phase 1.
 | WP | Name | Status |
 |----|------|--------|
 | 0 | Environment Audit | Done |
-| 1 | Project Scaffold | In progress — structure + docs created, GitHub remote pending |
+| 1 | Project Scaffold | Done — structure/docs created, synced to local folder, pushed to GitHub |
 | 2 | Research Design / Preregistration | Not started |
 | 3 | Data Acquisition | Not started |
 | 4 | Data Integrity | Not started |
@@ -31,11 +31,10 @@ no MQL5, no product/dashboard in Phase 1.
 
 ## Infrastructure status
 - Cloud research sandbox: Python 3.11.15, Git 2.43.0, pandas/numpy/scipy/matplotlib/pytest/pyarrow installed.
-- Local persistent folder: connected — `Desktop\XAUUSD_Research` on user's Windows PC.
-- GitHub: private repo + Personal Access Token requested from user, not yet received.
+- Local persistent folder: connected — `C:\Users\AK\Desktop\XAUUSD_Research` on user's Windows PC.
+- GitHub: connected — `Zeeshanhussyn/XAUUSD---Trading-bot-ICT-Concepts-` (private). WP1 scaffold commit pushed to `main`, verified remote HEAD == local HEAD.
 - Data source (MT5 export vs. free public data): to be decided in WP3.
 
 ## Next action
-Waiting on: (1) GitHub repo name + Personal Access Token from user, (2) then push initial commit
-to GitHub, (3) then begin WP2 (Preregistration) — resolve session-window / lookback / SL-buffer
-ambiguities with the user before writing PREREGISTRATION.md.
+Starting WP2 (Preregistration) — resolve session-window / lookback / SL-buffer / liquidity-hierarchy
+ambiguities with the user via A/B/C/D questions before writing PREREGISTRATION.md.

@@ -2,6 +2,14 @@
 
 All notable changes to this project are logged here, newest first.
 
+## 2026-08-24 — GitHub connected
+
+- User created private GitHub repo `Zeeshanhussyn/XAUUSD---Trading-bot-ICT-Concepts-` and provided
+  a fine-scoped Personal Access Token.
+- Pushed initial WP1 scaffold commit to `origin/main`. Verified remote HEAD matches local HEAD.
+- Token was used only transiently for the push command (via a one-off `http.extraheader`, never
+  written to `.git/config` or any file) and is not stored anywhere.
+
 ## 2026-08-24 — Work Package 1: Project Scaffold
 
 - Created clean project folder structure: `data/`, `src/xauusd_research/`, `tests/`, `config/`,
