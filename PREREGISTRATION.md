@@ -1,7 +1,9 @@
 # PREREGISTRATION — XAUUSD ICT/SMC Liquidity-Sweep Strategy (Phase 1)
 
-Status: **DRAFT — awaiting explicit user approval before any strategy backtest is run.**
-Date: 2026-08-24
+Status: **APPROVED by user on 2026-08-24.** No strategy backtest has been run yet — this document
+was approved before WP9 (Baseline Development Backtest). Any change after a backtest has been run
+must be logged as a new dated entry below and in `RESEARCH_DECISIONS.md` / `TRIAL_LOG.csv`.
+Date: 2026-08-24 (approved 2026-08-24)
 
 This document is written BEFORE any strategy result exists. It is not to be edited after results
 are seen without recording the change as a new, dated entry in `RESEARCH_DECISIONS.md` and a new

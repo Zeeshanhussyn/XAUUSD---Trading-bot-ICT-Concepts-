@@ -2,6 +2,19 @@
 
 All notable changes to this project are logged here, newest first.
 
+## 2026-08-24 — Work Package 2: Preregistration approved
+
+- Wrote `PREREGISTRATION.md` covering baseline configuration, planned one-factor-at-a-time
+  ablation comparisons, success/kill criteria, data split, and holdout process.
+- Session windows, displacement lookbacks, SL buffer, major-opposing-liquidity hierarchy, and
+  broker-cost-assumption approach confirmed with user via A/B/C/D questions before writing.
+- All baseline choices not explicitly specified in the founding brief (Asia range variant,
+  session tight/wide, HTF strict/flexible, swing N, sweep strictness, MSS variant, displacement
+  variant, FVG freshness/entry/selection, pending-timeout duration, SL variant, news/spread
+  baseline) were flagged transparently as Claude's defaults; both sides of every such comparison
+  remain planned ablation tests in WP10, nothing was discarded.
+- User approved the document as-is on 2026-08-24.
+
 ## 2026-08-24 — GitHub connected
 
 - User created private GitHub repo `Zeeshanhussyn/XAUUSD---Trading-bot-ICT-Concepts-` and provided
