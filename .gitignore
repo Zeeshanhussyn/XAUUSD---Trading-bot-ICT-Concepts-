@@ -1,0 +1,28 @@
+# Raw market data (large, re-downloadable, not meant for git history)
+data/raw/*
+!data/raw/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Secrets / credentials — never commit these
+.env
+*.env
+*token*
+*secret*
+*credentials*
+*.pem
+*.key
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Large generated artifacts (keep results/ CSVs & reports, drop heavy caches)
+*.parquet.tmp
