@@ -58,13 +58,15 @@ strategy exists.
 with arithmetically known answers. Engine runs 230,400 bars in ~3.7s.
 
 **Strongest evidence:** information-free 1:2 entries over the development period return a
-0.3213 / 0.3313 win rate against a theoretical breakeven of 1/3, with zero wins above the
+0.3211 / 0.3335 win rate against a theoretical breakeven of 1/3, with zero wins above the
 planned target and real gap losses down to −4.91R. The engine manufactures no edge, never
 credits gap improvement, and always takes gap damage. **Verdict: proceed to WP6.**
 
-**One item open for the user:** the whole-bar validity rule makes the preregistered 25-minute
-pending-order life exactly 1 bar rather than the "≈1-2" in PREREGISTRATION.md §2. Both
-settings are already WP10 ablations and no backtest has run — changing it costs nothing.
+**Preregistration amended (2026-08-25, pre-backtest):** pending-order validity 25 → **50
+minutes**. The engine's whole-bar validity rule had made 25 minutes work out to exactly one
+15m bar, against the "≈1-2 candles" the document described. User chose to lengthen the
+validity rather than weaken the fill rule. 25-minute and current-session-only remain WP10
+ablations. Baseline parameters now live in `src/xauusd_research/config.py`.
 
 ## Infrastructure status
 - Cloud research sandbox: Python 3.11.15, Git 2.43.0, pandas/numpy/scipy/matplotlib/pytest/pyarrow installed.

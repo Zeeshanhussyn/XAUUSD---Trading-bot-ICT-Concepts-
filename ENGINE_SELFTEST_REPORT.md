@@ -51,16 +51,17 @@ native daily series does not cover.
 
 Period: 2012-05-15 → 2018-03-02 (136,110 m15 bars).
 Costs: none (`ZeroCostModel`) — this is an engine test, not a research run.
+Pending-order validity: 50 minutes (preregistered baseline).
 Both strategies use a strict 1:2 reward-to-risk, so the breakeven win rate
 is 1/3 ≈ 0.333.
 
 | Metric | Long-only | Short-only |
 |---|---|---|
-| Trades | 7,961 | 8,045 |
-| Win rate | 0.3213 | 0.3313 |
-| Expectancy (R) | -0.0391 | -0.0124 |
-| Total R | -311.4567 | -99.9467 |
-| Profit factor | 0.9426 | 0.9816 |
+| Trades | 7,755 | 7,868 |
+| Win rate | 0.3211 | 0.3335 |
+| Expectancy (R) | -0.0398 | -0.0057 |
+| Total R | -308.9400 | -45.0700 |
+| Profit factor | 0.9416 | 0.9915 |
 | Best trade (R) | 2.0000 | 2.0000 |
 | Worst trade (R) | -4.9133 | -6.4933 |
 
@@ -77,9 +78,9 @@ booked at the target. Costs of ambiguity fall on us in both directions.
 
 | Outcome | Long-only | Short-only |
 |---|---|---|
-| Losses worse than −1R (real gaps) | 44 | 58 |
-| Losses exactly −1R | 5,359 | 5,322 |
-| Wins exactly +2R | 2,558 | 2,665 |
+| Losses worse than −1R (real gaps) | 39 | 57 |
+| Losses exactly −1R | 5,226 | 5,187 |
+| Wins exactly +2R | 2,490 | 2,624 |
 | **Wins above +2R (must be 0)** | 0 | 0 |
 
 Largest gap losses in the long-only run:
@@ -88,9 +89,9 @@ Largest gap losses in the long-only run:
 |---|---|---|---|---|---|
 | 2017-04-21 15:45:00+00:00 | 1283.13 | 1280.13 | 2017-04-23 22:15:00+00:00 | 1268.39 | -4.91 |
 | 2016-06-17 20:15:00+00:00 | 1297.58 | 1294.58 | 2016-06-19 22:15:00+00:00 | 1286.09 | -3.83 |
-| 2014-11-28 18:45:00+00:00 | 1168.22 | 1165.22 | 2014-11-30 23:15:00+00:00 | 1158.49 | -3.24 |
-| 2016-11-04 18:30:00+00:00 | 1301.67 | 1298.67 | 2016-11-06 23:15:00+00:00 | 1292.27 | -3.13 |
+| 2016-11-04 13:45:00+00:00 | 1303.01 | 1300.01 | 2016-11-06 23:15:00+00:00 | 1292.27 | -3.58 |
 | 2013-07-05 12:30:00+00:00 | 1238.20 | 1235.20 | 2013-07-05 12:45:00+00:00 | 1229.61 | -2.86 |
+| 2014-11-28 18:45:00+00:00 | 1165.98 | 1162.98 | 2014-11-30 23:15:00+00:00 | 1158.49 | -2.50 |
 
 Wins above the target are zero on both sides. Gap improvement is never
 credited to us; gap damage always is. The asymmetry is deliberate.
@@ -99,11 +100,11 @@ credited to us; gap damage always is. The asymmetry is deliberate.
 
 | Cancellation reason | Long-only | Short-only |
 |---|---|---|
-| EXPIRED | 4,489 | 4,765 |
+| EXPIRED | 2,139 | 2,251 |
 
-`EXPIRED` dominates because the preregistered 25-minute validity leaves a
-resting order live for exactly one 15-minute bar under the engine's
-whole-bar validity rule (see ENGINE_SPEC.md §5).
+`EXPIRED` dominates: the preregistered 50-minute
+validity leaves a resting order live for 3 fifteen-minute bars under the
+engine's whole-bar validity rule (see ENGINE_SPEC.md §5).
 
 ## 6. Equity accounting
 
@@ -112,9 +113,9 @@ so the equity curve stays a faithful rescaling of the R sequence.
 
 | Risk/trade | Final equity (start $100,000) | Max drawdown | Account ruined |
 |---|---|---|---|
-| 0.25% | $22,136 | $-89,504 | no |
-| 0.50% | $-55,728 | $-179,008 | yes — 2014-09-25 |
-| 1.00% | $-211,457 | $-358,017 | yes — 2013-04-17 |
+| 0.25% | $22,765 | $-90,902 | no |
+| 0.50% | $-54,470 | $-181,803 | yes — 2014-09-22 |
+| 1.00% | $-208,940 | $-363,607 | yes — 2013-04-16 |
 
 A non-compounding curve keeps subtracting the same cash risk after the
 account would really have been wiped out, so the final figure can be

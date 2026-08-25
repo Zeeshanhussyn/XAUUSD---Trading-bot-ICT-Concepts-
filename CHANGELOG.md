@@ -30,11 +30,16 @@ All notable changes to this project are logged here, newest first.
   return a 0.3213 / 0.3313 win rate against a theoretical breakeven of 1/3, with zero wins
   above the planned target and 44/58 real gap losses worse than −1R. The engine does not
   manufacture edge, never credits gap improvement, and always takes gap damage.
+- **PREREGISTRATION.md amended (pre-backtest):** pending-order validity 25 → **50 minutes**.
+  The whole-bar validity rule had made 25 minutes work out to exactly one 15m bar, against the
+  "≈1-2 candles" the document described. User chose to lengthen the validity rather than
+  weaken the fill rule; 25-minute and current-session-only remain WP10 ablations. No backtest
+  had been run, so the change carries no overfitting risk. Self-test after the change:
+  expiries fell from ~4,500 to ~2,150 per run, win rates stayed at breakeven
+  (0.3211 / 0.3335 against 1/3), wins above target stayed at zero.
+- Preregistered baseline parameters collected into `src/xauusd_research/config.py`, each
+  traceable to a line of PREREGISTRATION.md §2. WP6 extends it per feature.
 - **Verdict: proceed to Work Package 6 (core features).**
-- One item left open for the user in `ENGINE_SPEC.md` §5: the whole-bar validity rule makes
-  the preregistered 25-minute pending-order life exactly 1 bar rather than the "≈1-2" the
-  document describes. Both settings are already WP10 ablations and no backtest has run, so
-  changing it costs nothing.
 
 ## 2026-08-25 — Work Package 4: Data Integrity (done)
 

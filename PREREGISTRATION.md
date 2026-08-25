@@ -18,6 +18,20 @@ time-based and unaffected. Displacement/ATR lookback periods keep the same perio
 average body, ATR(14)) now applied to 15-minute bars — this was Claude's default at the new
 timeframe, not re-confirmed line-by-line, and is called out here for the user to veto if desired.
 
+### Amendment — 2026-08-25 (pre-backtest, WP5 backtest engine)
+
+**Pending entry validity changed from 25 minutes to 50 minutes.** Reason: the engine resolves
+a resting order against a bar only if the order was live for the *whole* bar, because it never
+knows where inside a 15-minute bar a price level was touched and therefore cannot know whether
+a touch preceded a mid-bar expiry — the same no-intrabar-path principle already applied to
+stop/target ambiguity. Under that rule a 25-minute validity leaves an order live for exactly
+**one** 15m bar, whereas the original wording above described "≈1-2 fifteen-minute candles".
+Rather than weaken the fill rule to recover the intended window, the validity itself was
+lengthened to 50 minutes (3 bars). Presented to the user with all three options and confirmed
+2026-08-25. **No backtest of any kind had been run at the time of this change**, so it carries
+no overfitting risk; 25-minute and current-session-only remain WP10 ablation variants, so
+nothing is discarded.
+
 This document is written BEFORE any strategy result exists. It is not to be edited after results
 are seen without recording the change as a new, dated entry in `RESEARCH_DECISIONS.md` and a new
 row in `TRIAL_LOG.csv`. Any post-hoc edit to this file after WP9 has run is itself a red flag for
@@ -60,7 +74,7 @@ what runs first. The user can change any of these before approving this document
 | Entry fill realism | Limit entry must trade ≥1 tick THROUGH the level to count as filled. Real intrabar sequence used where available; conservative assumption otherwise. Ambiguous SL/TP order → **stop-first** | fixed (hard rule, from brief) |
 | Confirmation timing | Confirmation candle must **close** before entry becomes eligible; entry starts next candle onward | **default** (matches brief's stated "Primary") — same-candle aggressive variant tested in WP10, built so it cannot use information only available at that candle's close before the close actually happened |
 | Missed entry | PRIMARY: if FVG never retraces, it is a missed setup — no chase | fixed (matches brief's stated "PRIMARY") — market-entry-after-confirmation variant tracked separately |
-| Pending entry validity | Maximum 25 minutes real time (expressed in minutes, not candle-count, so it survives the 5m→15m timeframe change — ≈1-2 fifteen-minute candles) | **default** — current-session-only and 50-min variants tested in WP10. Cancelled immediately on opposite structure break, sweep-extreme invalidation, or session end (hard rule) |
+| Pending entry validity | Maximum **50 minutes** real time (amended 2026-08-25, see below — was 25 minutes). Under the engine's whole-bar validity rule this leaves an order live for 3 fifteen-minute bars | **default** — 25-minute and current-session-only variants tested in WP10. Cancelled immediately on opposite structure break, sweep-extreme invalidation, or session end (hard rule) |
 | Stop loss | Variant B: beyond MSS/CHOCH invalidation swing | **default** — Variant A (beyond sweep extreme) tested in WP10 |
 | SL buffer | 0.1 × ATR(14), 15m, causal | confirmed by user at 5m; carried forward to 15m per 2026-08-25 amendment |
 | Minimum RR | Fixed target ≥ 1:2 | fixed (from brief) — stricter "nearest opposing PDH/PDL or Asia H/L also allows ≥1:2" variant tested in WP10, using the hierarchy below |

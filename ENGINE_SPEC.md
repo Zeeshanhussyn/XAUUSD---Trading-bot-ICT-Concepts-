@@ -83,16 +83,19 @@ explicit submitted-at-bar guard.
 **Validity.** An order is eligible during a bar only if it is live for the
 **whole** bar (`expires_at >= bar.close_time`). The engine never knows where
 inside a bar a level was touched, so it cannot know whether a touch preceded a
-mid-bar expiry; refusing the partial bar applies the same
-no-intrabar-path principle used everywhere else. With the preregistered
-25-minute validity this leaves an order live for exactly one 15m bar.
+mid-bar expiry; refusing the partial bar applies the same no-intrabar-path
+principle used everywhere else.
 
-> **Open for user review.** `PREREGISTRATION.md` §2 describes the 25-minute
-> validity as "≈1-2 fifteen-minute candles". The whole-bar rule makes it
-> exactly 1. Setting `whole_bar_validity=False` relaxes it to any overlap,
-> giving 2. Both are already inside the WP10 ablation ("pending validity
-> duration"), and no backtest has been run, so this can be changed at no cost
-> to research integrity.
+This rule made the original 25-minute validity work out to exactly one 15m bar,
+where `PREREGISTRATION.md` §2 had described "≈1-2 candles". Presented to the
+user on 2026-08-25 with the three available options; the decision was to keep
+the whole-bar fill rule and lengthen the **baseline validity to 50 minutes**
+(3 bars) instead of weakening the fill rule. Recorded as a dated amendment in
+`PREREGISTRATION.md`; no backtest had been run, so it carries no overfitting
+risk. 25-minute and current-session-only remain WP10 ablations, and
+`whole_bar_validity=False` remains available as a separate ablation switch.
+
+The live value is `config.BASELINE_PENDING_VALIDITY_MINUTES`.
 
 **One position at a time.** Source: `PREREGISTRATION.md` §2, hard rule. The
 moment one resting order fills, every other resting order is cancelled. Where
@@ -115,7 +118,7 @@ verified from the data.
 | Take profit | ≥1 tick **through** | the target | still the target — no gap bonus |
 
 The asymmetry is deliberate. A gap can only ever hurt us. Measured over the
-development period, information-free strategies produced 44 and 58 losses worse
+development period, information-free strategies produced 39 and 57 losses worse
 than −1R, and **zero** wins above +2R.
 
 ## 7. Intrabar ambiguity

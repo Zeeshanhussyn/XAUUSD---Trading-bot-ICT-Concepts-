@@ -96,19 +96,30 @@ R-multiples remain the primary reporting unit regardless. `ruin_point()` reports
 account would actually have been wiped out, since a non-compounding curve can otherwise show
 a meaningless negative balance.
 
-**Engine decision (not user-facing at the time, flagged for review):** a resting order is
-eligible to fill during a bar only if it is live for the *whole* bar. The engine never knows
-where inside a bar a level was touched, so it cannot know whether a touch preceded a mid-bar
-expiry — the same no-intrabar-path principle used for stop/target ambiguity. With the
-preregistered 25-minute validity this makes an order live for exactly one 15m bar, where
-PREREGISTRATION.md §2 describes "≈1-2". Both settings are already WP10 ablations and no
-backtest has been run, so this is changeable at zero cost to research integrity. **Awaiting
-user confirmation.**
+**Q5 — Pending-order validity: baseline lengthened from 25 to 50 minutes (RESOLVED).**
+The engine resolves a resting order against a bar only if the order was live for the *whole*
+bar, because it never knows where inside a 15-minute bar a level was touched and so cannot
+know whether a touch preceded a mid-bar expiry — the same no-intrabar-path principle applied
+to stop/target ambiguity. That made the preregistered 25-minute validity work out to exactly
+**one** 15m bar, against the "≈1-2 fifteen-minute candles" PREREGISTRATION.md §2 described.
+Presented to the user with three options (keep 1 bar / relax the fill rule to 2 bars / lengthen
+the validity); the user chose to **lengthen the baseline validity to 50 minutes** and keep the
+fill rule intact.
+**Why this is not overfitting:** no backtest of any kind had been run when the change was made,
+so no result could have influenced it. Logged as a dated amendment in PREREGISTRATION.md.
+25-minute and current-session-only remain WP10 ablation variants, and `whole_bar_validity=False`
+remains a separate ablation switch — nothing was discarded.
+**Effect measured on the self-test:** expiries fell from ~4,500 to ~2,150 per run; win rates
+stayed at breakeven (0.3211 / 0.3335 against 1/3), and wins above the planned target stayed at
+zero.
+
+**Housekeeping:** preregistered baseline parameters now live in one place,
+`src/xauusd_research/config.py`, each traceable to a line of PREREGISTRATION.md §2. WP6 extends
+that file as each feature is implemented.
 
 ## Pending decisions (to be resolved before relevant work package)
 
-- WP5/WP10 (open): whole-bar vs any-overlap pending-order validity — see the engine decision
-  above and `ENGINE_SPEC.md` §5.
+- None currently open.
 
 - WP3 (open): how to handle the 2022-03 → 2026-08 data gap — see next message to user for the
   exact A/B choice (use 2012-2022 as the full working window and holdout, vs. user manually fills

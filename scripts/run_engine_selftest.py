@@ -21,6 +21,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import pandas as pd  # noqa: E402
 
+from xauusd_research.config import (  # noqa: E402
+    BASELINE_PENDING_VALIDITY_MINUTES,
+    INITIAL_EQUITY,
+    RISK_PER_TRADE_LEVELS,
+)
 from xauusd_research.engine.backtester import (  # noqa: E402
     Backtester,
     equity_curve,
@@ -51,7 +56,7 @@ class FixedDistanceLong:
         limit = round(close - 0.50, 2)
         ctx.broker.submit(
             Side.LONG, limit, round(limit - 3.0, 2), round(limit + 6.0, 2),
-            expires_at=ctx.now + pd.Timedelta(minutes=25),
+            expires_at=ctx.now + pd.Timedelta(minutes=BASELINE_PENDING_VALIDITY_MINUTES),
         )
 
 
@@ -63,7 +68,7 @@ class FixedDistanceShort(FixedDistanceLong):
         limit = round(close + 0.50, 2)
         ctx.broker.submit(
             Side.SHORT, limit, round(limit + 3.0, 2), round(limit - 6.0, 2),
-            expires_at=ctx.now + pd.Timedelta(minutes=25),
+            expires_at=ctx.now + pd.Timedelta(minutes=BASELINE_PENDING_VALIDITY_MINUTES),
         )
 
 
@@ -154,6 +159,7 @@ def write_report(runs, dev, m15, d1_ny, h4_ny, d1_native) -> None:
     add("")
     add(f"Period: {dev.index[0].date()} → {dev.index[-1].date()} ({len(dev):,} m15 bars).")
     add("Costs: none (`ZeroCostModel`) — this is an engine test, not a research run.")
+    add(f"Pending-order validity: {BASELINE_PENDING_VALIDITY_MINUTES} minutes (preregistered baseline).")
     add("Both strategies use a strict 1:2 reward-to-risk, so the breakeven win rate")
     add("is 1/3 ≈ 0.333.")
     add("")
@@ -221,9 +227,9 @@ def write_report(runs, dev, m15, d1_ny, h4_ny, d1_native) -> None:
     for reason in sorted(set(cl) | set(cs)):
         add(f"| {reason} | {cl.get(reason, 0):,} | {cs.get(reason, 0):,} |")
     add("")
-    add("`EXPIRED` dominates because the preregistered 25-minute validity leaves a")
-    add("resting order live for exactly one 15-minute bar under the engine's")
-    add("whole-bar validity rule (see ENGINE_SPEC.md §5).")
+    add(f"`EXPIRED` dominates: the preregistered {BASELINE_PENDING_VALIDITY_MINUTES}-minute")
+    add("validity leaves a resting order live for 3 fifteen-minute bars under the")
+    add("engine's whole-bar validity rule (see ENGINE_SPEC.md §5).")
     add("")
 
     add("## 6. Equity accounting")
@@ -231,10 +237,10 @@ def write_report(runs, dev, m15, d1_ny, h4_ny, d1_native) -> None:
     add("Fixed risk on **initial** equity, no compounding (user decision, WP5 Q4),")
     add("so the equity curve stays a faithful rescaling of the R sequence.")
     add("")
-    add("| Risk/trade | Final equity (start $100,000) | Max drawdown | Account ruined |")
+    add(f"| Risk/trade | Final equity (start ${INITIAL_EQUITY:,.0f}) | Max drawdown | Account ruined |")
     add("|---|---|---|---|")
-    for pct in (0.0025, 0.005, 0.01):
-        eq = equity_curve(runs["long"].trades, 100_000.0, pct)
+    for pct in RISK_PER_TRADE_LEVELS:
+        eq = equity_curve(runs["long"].trades, INITIAL_EQUITY, pct)
         ruin = ruin_point(eq)
         ruin_txt = "no" if ruin is None else f"yes — {ruin.date()}"
         add(
