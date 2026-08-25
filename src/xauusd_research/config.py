@@ -113,3 +113,42 @@ COST_STRESS_MULTIPLIER: Final[float] = 2.0
 #: Session keys defined in `engine.clock.SESSION_WINDOWS`.
 BASELINE_TRADING_SESSIONS: Final[tuple[str, ...]] = ("london_tight", "ny_tight")
 BASELINE_ASIA_WINDOW: Final[str] = "asia_a"
+
+# --- Analysis tags (WP8) -----------------------------------------------------
+#
+# Non-blocking. FOUNDING_BRIEF.md, "WORK PACKAGE 8": these attach descriptive
+# information to a setup or a bar; none may filter or block a trade. The
+# brief leaves most of these mechanically undefined ("Analysis tag only").
+# Confirmed by the user 2026-08-25 (WP8 Q1-4) — see PREREGISTRATION.md.
+
+#: Order Block = last opposite-colour candle before the MSS displacement leg,
+#: searched back at most this many bars (reuses the displacement lookback).
+OB_SEARCH_LOOKBACK: Final[int] = BASELINE_DISPLACEMENT_LOOKBACK
+
+#: Equal Highs/Lows tolerance, as a multiple of ATR(14) at the second swing.
+EQH_EQL_ATR_MULTIPLE: Final[float] = 0.10
+
+#: Liquidity cluster proximity — both bands are tested, from the brief
+#: directly; neither is given extra weight.
+LIQUIDITY_CLUSTER_TIGHT_ATR_MULTIPLE: Final[float] = 0.10
+LIQUIDITY_CLUSTER_WIDE_ATR_MULTIPLE: Final[float] = 0.20
+
+#: Market regime — rolling ATR-percentile window (volatility) and rolling
+#: Kaufman-efficiency-ratio window (trend), in m15 bars. 480 bars is ~5
+#: trading days of 24-hour m15 coverage (the base series is not
+#: session-filtered before this point).
+REGIME_ATR_PERCENTILE_WINDOW: Final[int] = 480
+REGIME_TREND_WINDOW: Final[int] = 480
+REGIME_HIGH_VOL_PERCENTILE: Final[float] = 0.75
+REGIME_LOW_VOL_PERCENTILE: Final[float] = 0.25
+
+#: Trend is also read as a rolling PERCENTILE of the efficiency ratio, not a
+#: fixed textbook cutoff. Measured on the WP8 development-period scan: the
+#: 480-bar efficiency ratio never once reached the traditional 0.6 threshold
+#: in 5.8 years (max observed 0.30) -- gold is simply too noisy intraday at
+#: 15m for that absolute cutoff, and using it anyway would make every bar in
+#: the dataset read "ranging", a tag with zero information content. The top
+#: quartile of the ratio's own trailing distribution is trending instead --
+#: this also makes both regime axes the same shape (relative to their own
+#: recent history), which a fixed cutoff on only one axis would not be.
+REGIME_TREND_PERCENTILE: Final[float] = 0.75

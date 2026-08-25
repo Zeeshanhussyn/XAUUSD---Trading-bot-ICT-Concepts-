@@ -2,6 +2,41 @@
 
 All notable changes to this project are logged here, newest first.
 
+## 2026-08-25 — Work Package 8: Analysis Tags (done)
+
+- Built `features/tags.py` — nine non-blocking analysis tags from FOUNDING_BRIEF.md's WORK
+  PACKAGE 8: Order Block, Breaker Block, Mitigation Block (all three are outcomes one detector
+  passes through, not separate detectors), Equal Highs/Lows, Previous Week High/Low,
+  Premium/Discount, Market Regime (volatility + trend axes), Liquidity Cluster, and Sequential
+  Liquidity Events. Confirmed non-interference by construction: nothing in this module is
+  imported by `engine/backtester.py` or any WP6/WP7 detector, and `tag_setup()` is proven not to
+  mutate the `Setup` it describes (unit and real-data tests).
+- **Four genuinely undefined tag mechanics put to the user as an A/B choice (WP8 Q1-4) and
+  recorded as a `PREREGISTRATION.md` amendment:** Order Block definition (last opposite-colour
+  candle before the MSS displacement leg — this also fixes Breaker and Mitigation, which are
+  states an order block passes through), Equal Highs/Lows tolerance (0.10 x ATR(14)),
+  Premium/Discount reference range (each setup's own sweep level + MSS reference swing), and
+  Market Regime method (rolling ATR percentile for volatility, rolling efficiency-ratio
+  percentile for trend).
+- Two further mechanics were direct, unambiguous extensions of a rule already fixed elsewhere in
+  the project and were implemented as Claude's default rather than put to a vote: Previous
+  Week High/Low's week boundary (every 17:00-NY trading day already belongs to exactly one ISO
+  week) and Sequential Liquidity Events' day scope (already carried on every `Sweep`).
+- **Calibration finding, corrected before any backtest ran.** Market Regime's trend axis was
+  first built against the textbook 0.6 efficiency-ratio cutoff; measured against the actual
+  development data it never fired once in 5.8 years (max observed 0.30 over a 480-bar window).
+  Replaced with a rolling percentile of the ratio against its own trailing history (top quartile
+  = trending) — the same shape already used for the volatility axis, and no longer a label that
+  never fires. Zero overfitting risk: found and fixed before Work Package 9 exists.
+- **1-minute context tag not implemented** — this project never acquired minute-level XAUUSD
+  data in bulk (WP3 amendment); a data-availability gap, not a decision, logged for restatement
+  in the WP15 final report alongside WP7's two gaps.
+- 33 new tests (225 total, all passing): 24 synthetic unit tests plus 9 real-data causality
+  tests, including truncation checks proving Order Block detection and Market Regime never use
+  a bar past their own confirmation point. `scripts/run_tags_report.py` writes
+  `TAGS_REPORT.md` against the same 88 reachable baseline setups WP6 identified — no profit or
+  loss figure anywhere in it. **Verdict: proceed to Work Package 9.**
+
 ## 2026-08-25 — Work Package 7: Execution / Cost Model (done)
 
 - **Measured, not assumed: the price series is a BID series.** Compared against the user's

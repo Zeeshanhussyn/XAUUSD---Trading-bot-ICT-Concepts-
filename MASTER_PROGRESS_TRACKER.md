@@ -20,7 +20,7 @@ no MQL5, no product/dashboard in Phase 1.
 | 5 | Backtest Engine | **Done** — see below |
 | 6 | Core Features | **Done** — see below |
 | 7 | Execution/Cost Model | **Done** — see below |
-| 8 | Analysis Tags | Not started |
+| 8 | Analysis Tags | **Done** — see below |
 | 9 | Baseline Development Backtest | Not started |
 | 10 | Staged Ablation | Not started |
 | 11 | Random Benchmark + Robustness | Not started |
@@ -127,6 +127,35 @@ restate in WP15.
 
 29 new tests (192 total, all passing). **Verdict: proceed to WP8.**
 
+## Work Package 8 result (2026-08-25)
+Nine non-blocking analysis tags from the brief's WORK PACKAGE 8 — Order Block, Breaker, Mitigation
+(three outcomes one detector passes through, not separate detectors), Equal Highs/Lows, Previous
+Week High/Low, Premium/Discount, Market Regime, Liquidity Cluster, Sequential Liquidity Events.
+None of them filter or block a trade, by construction: nothing in `features/tags.py` is imported
+by the backtester or any earlier detector, and tagging is proven not to mutate the setup it
+describes.
+
+**Four mechanics the brief left undefined, resolved with the user:** Order Block = last
+opposite-colour candle before the MSS displacement leg; Equal Highs/Lows tolerance = 0.10x ATR;
+Premium/Discount range = each setup's own swept level + reference swing; Market Regime = rolling
+ATR percentile (volatility) + rolling efficiency-ratio percentile (trend). Two more — the previous-
+week boundary and which sweep counts as "later" in a day — were direct extensions of rules already
+fixed and were logged as Claude's default rather than put to a vote.
+
+**Self-caught calibration finding.** The trend-regime cutoff was first built at the textbook 0.6
+efficiency-ratio threshold; measured against 5.8 real development years it never fired once (max
+0.30), which would have made "trending" a label with zero information content. Replaced with a
+rolling percentile of the ratio against its own trailing history — found and fixed before Work
+Package 9 exists, so it carries no overfitting risk.
+
+**1-minute context tag not implemented** — no minute-level data was ever acquired (WP3 amendment).
+A data-availability gap for the WP15 report, alongside WP7's two gaps.
+
+33 new tests (225 total, all passing), including real-data truncation checks proving Order Block
+and Market Regime never use a bar past their own confirmation point. `TAGS_REPORT.md` covers all
+nine tags against the same 88 reachable baseline setups WP6 identified — no P/L figure in it.
+**Verdict: proceed to WP9.**
+
 ## Infrastructure status
 - Cloud research sandbox: Python 3.11.15, Git 2.43.0, pandas/numpy/scipy/matplotlib/pytest/pyarrow installed.
 - Local persistent folder: connected — `C:\Users\AK\Desktop\XAUUSD_Research` on user's Windows PC, kept in sync after every checkpoint.
@@ -134,8 +163,6 @@ restate in WP15.
 - Cloud sandbox network is restricted to software registries + GitHub only — cannot reach financial data sites or MT5 directly.
 
 ## Next action
-WP8 (Analysis Tags) — the brief's non-blocking tags: order block / breaker / mitigation overlap,
-equal highs and lows, previous week high/low, premium-discount, market regime (trending, ranging,
-high/low volatility), liquidity clusters (<=0.10 vs <=0.20 ATR proximity) and sequential
-liquidity events. Every one of these is recorded alongside a trade and **none of them filters or
-blocks a trade in V1** — the brief is explicit about that.
+WP9 (Baseline Development Backtest) — the first time the pre-registered baseline actually runs.
+Both co-primary SL variants (A and B) run together; confirm preregistration one more time before
+starting; run the baseline only, do not optimize; explain the result to the user plainly.

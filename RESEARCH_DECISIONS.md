@@ -228,6 +228,49 @@ blackout plus news-period slippage (requires point-in-time economic-event data t
 reach). FOUNDING_BRIEF.md: "If trustworthy point-in-time data cannot be obtained for a particular
 field: DO NOT fabricate it." Both are gaps to restate in the WP15 report, not silent omissions.
 
+## 2026-08-25 — Work Package 8 tag decisions
+
+**Decisions (user, 2026-08-25, WP8 Q1-4) — four tag mechanics the brief never defined
+operationally:**
+- **Order Block** (also fixes Breaker and Mitigation, which are states an order block passes
+  through, not separate detectors): the last opposite-colour candle immediately before the
+  MSS's own displacement leg, searched backward. Ties directly into the setup pipeline already
+  built rather than introducing a second, unrelated notion of "swing" for OB purposes.
+- **Equal Highs/Lows tolerance:** 0.10 x ATR(14), sampled at the second swing's own bar —
+  consistent with the SL buffer and liquidity-cluster tolerances already in the project.
+- **Premium/Discount reference range:** each setup's own two already-computed levels — the
+  level that was swept, and the MSS reference swing it broke — not a new independent range.
+  Adds zero causal risk since both prices already exist on the `Setup`.
+- **Market Regime method:** rolling ATR(14) percentile for volatility; rolling Kaufman
+  efficiency ratio for trend, per the brief's explicit "keep it simple, no ML classifier"
+  instruction.
+
+**Not put to the user — direct, unambiguous extensions of a rule already fixed elsewhere in the
+project, implemented as Claude's default and logged rather than voted on:**
+- **Previous Week High/Low** boundary: every 17:00-NY trading day already belongs to exactly
+  one ISO calendar week (the Sunday-evening session already maps to Monday's trading day), so
+  "week" needed no new time-zone or roll-hour decision.
+- **Sequential Liquidity Events:** scoped to the trading day already carried on every `Sweep`.
+  The brief's own worked example (Asia Low swept, later PDH/PDL swept) is same-day.
+
+**Finding and self-correction: the trend-regime cutoff was miscalibrated, and was fixed before
+any backtest touched it.** The first implementation used the textbook 0.6 efficiency-ratio
+threshold for "trending." Measured against the actual 5.8-year development period, the 480-bar
+efficiency ratio never once reached 0.6 (max observed 0.30) — gold is too noisy intraday at 15m
+for that number, and using it anyway would have made "trending" a label that never fires, with
+zero information content. Replaced with a rolling percentile of the ratio against its own
+trailing history (top quartile = trending), matching the volatility axis's own design. This is
+a parameter calibration correction, not a strategy-rule change, found and fixed while building
+the WP8 report — before Work Package 9 exists — so it carries no overfitting risk of any kind.
+
+**Not implemented, deliberately:** the 1-minute context tag. This project never acquired
+minute-level XAUUSD data in bulk (WP3 amendment — free multi-year 5m-or-finer data was not
+obtainable), and nothing at that resolution exists in `data/processed/`. A data-availability
+gap, not a decision, logged for restatement in the WP15 final report alongside WP7's two gaps
+(abnormal-spread filter, news blackout).
+
+Full counts for every tag against the 88 reachable baseline setups are in `TAGS_REPORT.md`.
+
 ## Pending decisions (to be resolved before relevant work package)
 
 - None currently open.

@@ -97,6 +97,46 @@ are seen without recording the change as a new, dated entry in `RESEARCH_DECISIO
 row in `TRIAL_LOG.csv`. Any post-hoc edit to this file after WP9 has run is itself a red flag for
 overfitting and must be called out as such in the final report.
 
+### Amendment — 2026-08-25 (pre-backtest, WP8 analysis tags)
+
+**Four genuinely undefined tag mechanics, resolved with the user; two direct extensions of
+already-fixed rules, not put to a vote; one calibration correction found and fixed before any
+backtest.** None of this changes which setups exist, their entry, or their stop — WP8 tags are
+non-blocking by the brief's own rule ("Tags must not silently alter trade decisions"), and nothing
+in `features/tags.py` is imported by the backtester or by any WP6/WP7 detector.
+
+*Confirmed by the user 2026-08-25 (WP8 Q1-4):*
+
+| Tag | Choice |
+|---|---|
+| Order Block (also fixes Breaker and Mitigation, which are states an OB passes through) | Last opposite-colour candle immediately before the MSS's displacement leg |
+| Equal Highs/Lows tolerance | 0.10 x ATR(14), sampled at the second swing's own bar |
+| Premium/Discount reference range | Each setup's own two levels: the swept level and the MSS reference swing |
+| Market Regime method | Rolling ATR-percentile (volatility) + rolling efficiency-ratio percentile (trend); simple and causal, not an ML classifier, per the brief |
+
+*Claude's default, logged rather than voted on — direct extensions of a rule already fixed
+elsewhere in the project:*
+
+* **Previous Week High/Low** boundary — every 17:00-NY trading day already belongs to exactly one
+  ISO calendar week, so "week" needed no new time-zone or roll-hour decision.
+* **Sequential Liquidity Events** — scoped to the trading day already carried on every `Sweep`; the
+  brief's own worked example is same-day, so no new session boundary was introduced.
+
+*Calibration correction, found here and fixed before WP9 runs, so it carries no overfitting risk.*
+Market Regime's trend axis was first built against the textbook 0.6 efficiency-ratio cutoff.
+Measured against the actual development period it never fired once in 5.8 years (max observed
+0.30 over a 480-bar window) — gold is too noisy intraday at 15m for that absolute number, which
+would have made "trending" a label with zero information content. It now reads the ratio as a
+rolling percentile of its own trailing history (top quartile = trending), the same shape already
+used for the volatility axis. See `config.py` (`REGIME_TREND_PERCENTILE`) and `CHANGELOG.md`.
+
+*Not implemented — a data-availability gap, not a decision.* The 1-minute context tag needs
+minute-level data this project never acquired in bulk (see the WP3 amendment below); nothing at
+that resolution exists in `data/processed/`. Restate in the WP15 final report, alongside WP7's
+un-implemented abnormal-spread filter and news blackout.
+
+Full detail, including the reachable-setup counts for every tag, is in `TAGS_REPORT.md`.
+
 ## 1. Research question
 
 > Does a PDH/PDL or Asia High/Low liquidity-sweep → HTF-bias → 15m MSS/CHOCH+displacement → FVG
