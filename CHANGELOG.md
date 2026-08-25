@@ -2,6 +2,42 @@
 
 All notable changes to this project are logged here, newest first.
 
+## 2026-08-25 — Work Package 6: Core Features (done)
+
+- Recovered the original 37,443-character master prompt from the session transcript and
+  stored it verbatim as `FOUNDING_BRIEF.md`. It had existed only inside a chat session, and
+  a compacted summary is not the source text. Every claim of the form "the brief says X" is
+  now checkable.
+- Confirmed against the recovered brief that the WP5 50-minute pending-order validity is one
+  of the three variants the brief itself listed — not an invention.
+- **PREREGISTRATION.md amended (pre-backtest):** the brief uses four terms it never defines
+  operationally. Each was put to the user as an A/B/C choice and answered 2026-08-25:
+  Daily bias "clear" = swing structure HH+HL / LH+LL (anything else neutral, and neutral
+  blocks); MSS reference swing = the most recent confirmed opposite swing existing at the
+  sweep, fixed; sweep stays live until the end of its own session (so sweeps outside a
+  session are not tracked); eligible FVG = only the gap centred on the MSS displacement
+  candle. Every alternative remains a WP10 ablation.
+- Built `src/xauusd_research/features/`: `swings.py` (fractal N=2 with explicit
+  `confirmed_at` lag), `levels.py` (PDH/PDL and Asia H/L with per-level availability
+  instants), `bias.py` (Daily/4H structural bias + FLEXIBLE and STRICT gates),
+  `sessions.py`, `sweeps.py` (strict pierce-and-reclaim), `structure.py` (displacement
+  Variant A + MSS), `fvg.py` (3-candle gaps and the assembled `Setup`).
+- 73 new tests (163 total, all passing), including a truncation test that recomputes the
+  whole chain on a shortened series and requires identical results — a leak in any detector
+  would change them.
+- `scripts/run_feature_scan.py` writes `FEATURES_REPORT.md` over the development period
+  only. No P/L figure anywhere in it.
+- **Major finding — sample size.** The pre-registered baseline yields 5,980 sweeps → 959
+  MSS → 638 FVG setups → 149 after the HTF gate → **88 where price actually returned to the
+  entry in time**, over 5.8 development years (~15/year). Extrapolated across development
+  plus validation that is ~118 trades, against the 400+ floor in PREREGISTRATION.md §5.
+  Reported, not fixed: the brief says "Never force extra trades merely to increase sample",
+  so loosening a rule now is the user's decision to take knowingly.
+- Displacement is not the scarce ingredient (34% of session bars qualify). The binding
+  constraint is a displacement candle that also closes through the reference swing before
+  the session ends — 4,147 of 5,980 sweeps expire first.
+- **Verdict: feature layer ready for Work Package 7; sample-size risk carried forward.**
+
 ## 2026-08-25 — Work Package 5: Backtest Engine (done)
 
 - **Critical finding, empirically verified:** the source labels bars by **open time**,

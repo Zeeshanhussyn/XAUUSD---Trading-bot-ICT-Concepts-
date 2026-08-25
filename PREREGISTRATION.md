@@ -32,6 +32,27 @@ lengthened to 50 minutes (3 bars). Presented to the user with all three options 
 no overfitting risk; 25-minute and current-session-only remain WP10 ablation variants, so
 nothing is discarded.
 
+### Amendment — 2026-08-25 (pre-backtest, WP6 core features)
+
+The founding brief (now stored verbatim as `FOUNDING_BRIEF.md`) uses four terms without ever
+defining them operationally. Code cannot be written against an undefined term, so each was put
+to the user as an explicit A/B/C choice and answered on 2026-08-25. **No backtest of any kind
+had been run**, so no result could have influenced any of these.
+
+| # | Term the brief leaves undefined | Resolution |
+|---|---|---|
+| 1 | "If Daily **bias is clear**…" | Daily bias comes from Daily swing structure: higher-high **and** higher-low = bullish, lower-high **and** lower-low = bearish, anything else = **neutral** (and neutral Daily blocks the trade). Same fractal definition as everywhere else, so no new parameter is introduced. |
+| 2 | "**meaningful swing** broken by candle body close" | The reference swing is fixed at the moment of the sweep: the most recent *confirmed* opposite-side swing that already existed when the sweep candle closed. It does not update as new swings form. This same swing defines the SL invalidation level for SL Variant B. |
+| 3 | How long a sweep stays live before its MSS | Until the end of the **same session** (London tight or NY tight) in which the sweep occurred. Consequence, stated explicitly: a sweep occurring outside a trading session window is not tracked at all, since it would have no session in which to expire. |
+| 4 | Where the entry FVG must have formed | Only the 3-candle FVG created by the **displacement candle that confirmed the MSS** — i.e. the FVG centred on that candle. FVGs formed elsewhere are not eligible in the baseline. |
+
+Each alternative offered remains a legitimate WP10 ablation and none is discarded. Values live
+in `src/xauusd_research/config.py`.
+
+**Also confirmed against the recovered brief:** the 50-minute pending-entry validity adopted in
+the WP5 amendment above is one of the three variants the brief itself listed ("current session
+only / 25 minutes / 50 minutes") — not a new invention.
+
 This document is written BEFORE any strategy result exists. It is not to be edited after results
 are seen without recording the change as a new, dated entry in `RESEARCH_DECISIONS.md` and a new
 row in `TRIAL_LOG.csv`. Any post-hoc edit to this file after WP9 has run is itself a red flag for
@@ -61,7 +82,10 @@ what runs first. The user can change any of these before approving this document
 | PDH/PDL trading day | 17:00 New York → 17:00 New York next day, DST-aware (`America/New_York` tz) | fixed (from brief) |
 | Asia range | Variant A: 00:00–05:00 London time (`Europe/London` tz, DST-aware) | **default** — Variant B (00:00–06:00) tested in WP10 |
 | Session windows | London tight 07:00–10:00 / wide 07:00–16:00; New York tight 08:30–11:00 / wide 08:00–17:00 (both `Europe/London` / `America/New_York` local time, DST-aware). Baseline uses **tight** windows; wide tested in WP10 | confirmed by user (windows) + default (tight-as-baseline) |
-| HTF bias | Daily = primary, 4H = confirmation, **FLEXIBLE** rule: Daily clear + 4H neutral/transition → trade allowed only if 15m MSS/CHOCH+displacement confirms Daily direction; 4H clearly opposing → blocked | **default** — STRICT (Daily+4H must both align) tested in WP10 |
+| HTF bias | Daily = primary, 4H = confirmation, **FLEXIBLE** rule: Daily clear + 4H neutral/transition → trade allowed only if 15m MSS/CHOCH+displacement confirms Daily direction; 4H clearly opposing → blocked. **"Clear" = Daily swing structure shows HH+HL (bullish) or LH+LL (bearish); anything else is neutral and blocks the trade** (WP6 amendment) | **default** — STRICT (Daily+4H must both align) tested in WP10 |
+| Sweep validity window | Sweep stays live until the end of the **same session** it occurred in; a sweep outside a session window is not tracked (WP6 amendment) | **default** — trading-day-long, fixed-bar and invalidation-only windows tested in WP10 |
+| MSS reference swing | The most recent confirmed opposite-side swing that existed **at the moment the sweep candle closed**; fixed, does not update (WP6 amendment). Also defines the SL Variant B invalidation level | **default** — break-time swing and window-extreme swing tested in WP10 |
+| Eligible FVG location | Only the 3-candle FVG centred on the **displacement candle that confirmed the MSS** (WP6 amendment) | **default** — any-FVG-after-MSS and any-unmitigated-FVG tested in WP10 |
 | Previous-day midpoint/open filter | Not used in baseline (optional analysis tag only) | fixed (from brief) |
 | Swing definition | Fractal N=2. A swing requiring future confirmation bars is usable only after those bars have closed (strict no-lookahead) | **default** — N=3 tested in WP10 |
 | Liquidity sweep | STRICT: penetration + same-candle close back inside/reclaim | **default** — LOOSER (reclaim within next 1–2 candles) tested in WP10 |

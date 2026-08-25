@@ -1,0 +1,298 @@
+"""Work Package 6 scan: run every feature detector over the development period
+and write FEATURES_REPORT.md.
+
+This produces **no profit or loss figure of any kind**. It counts how often each
+piece of the baseline setup occurs and where candidate setups are lost, so the
+structure of the strategy is understood before Work Package 9 measures whether
+it makes money. Nothing here should be read as evidence for or against edge.
+
+Only the development period is touched. Validation and holdout are untouched.
+
+Run: python3 scripts/run_feature_scan.py
+"""
+
+from __future__ import annotations
+
+import sys
+from collections import Counter
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+from xauusd_research.config import (  # noqa: E402
+    BASELINE_ASIA_WINDOW,
+    BASELINE_PENDING_VALIDITY_MINUTES,
+    BASELINE_SWING_N,
+    BASELINE_TRADING_SESSIONS,
+)
+from xauusd_research.engine.clock import TICK_SIZE, bar_close_index  # noqa: E402
+from xauusd_research.engine.resample import build_d1_ny, build_h4_ny  # noqa: E402
+from xauusd_research.features.bias import (  # noqa: E402
+    Bias,
+    bias_by_bar,
+    htf_gate_flexible,
+    htf_gate_strict,
+    project_to_base,
+)
+from xauusd_research.features.fvg import build_setups  # noqa: E402
+from xauusd_research.features.levels import build_levels  # noqa: E402
+from xauusd_research.features.sessions import build_session_map  # noqa: E402
+from xauusd_research.features.structure import (  # noqa: E402
+    displacement_ratio,
+    find_mss,
+    rejection_counts,
+)
+from xauusd_research.features.sweeps import (  # noqa: E402
+    find_sweeps,
+    penetration_stats,
+    summarise_sweeps,
+)
+from xauusd_research.features.swings import find_swings  # noqa: E402
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DEV_END = pd.Timestamp("2018-03-04", tz="UTC")
+VALIDITY_BARS = BASELINE_PENDING_VALIDITY_MINUTES // 15
+
+
+def main() -> None:
+    m15 = pd.read_parquet(REPO_ROOT / "data" / "processed" / "XAUUSD_m15.parquet")
+    dev = m15[m15.index < DEV_END]
+    o, h, l, c = (dev[x].to_numpy(dtype=float) for x in ("open", "high", "low", "close"))
+    print(f"development bars: {len(dev):,}")
+
+    d1, h4 = build_d1_ny(dev), build_h4_ny(dev)
+    base_close = bar_close_index(dev.index, "m15")
+
+    def htf_track(series):
+        sw = find_swings(
+            series.df["high"].to_numpy(float), series.df["low"].to_numpy(float),
+            BASELINE_SWING_N,
+        )
+        n_closed = np.searchsorted(series.close_time.values, base_close.values, side="right")
+        return sw, project_to_base(bias_by_bar(sw, len(series)), n_closed)
+
+    d1_sw, d1_bias = htf_track(d1)
+    h4_sw, h4_bias = htf_track(h4)
+    flexible = [htf_gate_flexible(a, b) for a, b in zip(d1_bias, h4_bias)]
+    strict = [htf_gate_strict(a, b) for a, b in zip(d1_bias, h4_bias)]
+
+    levels = build_levels(dev, asia_window=BASELINE_ASIA_WINDOW)
+    smap = build_session_map(dev.index, BASELINE_TRADING_SESSIONS)
+    sweeps = find_sweeps(dev, levels, smap)
+
+    m15_sw = find_swings(h, l, BASELINE_SWING_N)
+    ratio = displacement_ratio(o, c)
+    mss, rejected = find_mss(sweeps, m15_sw, o, c, ratio)
+    setups, no_gap = build_setups(mss, h, l)
+
+    gated = [s for s in setups if flexible[s.confirmed_at] is s.direction]
+    gated_strict = [s for s in setups if strict[s.confirmed_at] is s.direction]
+    reachable = [s for s in gated if _entry_reachable(s, h, l)]
+
+    print(
+        f"sweeps {len(sweeps)} -> MSS {len(mss)} -> FVG {len(setups)} "
+        f"-> gated {len(gated)} -> reachable {len(reachable)}"
+    )
+    write_report(
+        dev, d1, h4, d1_sw, h4_sw, d1_bias, h4_bias, flexible, smap, sweeps,
+        ratio, mss, rejected, setups, no_gap, gated, gated_strict, reachable,
+    )
+    print(f"\nReport written to {REPO_ROOT / 'FEATURES_REPORT.md'}")
+
+
+def _entry_reachable(setup, high: np.ndarray, low: np.ndarray) -> bool:
+    """Would price have traded one tick through the entry inside the order's life?
+
+    A count, not a result: it says how many setups could ever have become trades,
+    which is what the pre-registered sample-size floor depends on. It says
+    nothing about whether those trades would have won or lost.
+    """
+    start = setup.confirmed_at + 1
+    stop = min(start + VALIDITY_BARS, len(high))
+    entry = setup.entry_price
+    if setup.direction is Bias.BULLISH:
+        return bool(np.any(low[start:stop] <= entry - TICK_SIZE))
+    return bool(np.any(high[start:stop] >= entry + TICK_SIZE))
+
+
+def write_report(
+    dev, d1, h4, d1_sw, h4_sw, d1_bias, h4_bias, flexible, smap, sweeps,
+    ratio, mss, rejected, setups, no_gap, gated, gated_strict, reachable,
+) -> None:
+    L: list[str] = []
+    add = L.append
+    years = (dev.index[-1] - dev.index[0]).days / 365.25
+
+    add("# FEATURES_REPORT")
+    add("")
+    add("Generated by `scripts/run_feature_scan.py` — Work Package 6.")
+    add("")
+    add("**No profit or loss figure appears anywhere in this report.** It counts how")
+    add("often each part of the baseline setup occurs and where candidates are lost.")
+    add("Whether the setup makes money is Work Package 9's question, not this one.")
+    add("")
+    add(f"Development period only: {dev.index[0].date()} → {dev.index[-1].date()} ")
+    add(f"({len(dev):,} 15-minute bars, {years:.1f} years). Validation and holdout untouched.")
+    add("")
+
+    add("## 1. Structure and bias")
+    add("")
+    add("| Series | Bars | Fractal swings (N=2) | Bullish | Bearish | Neutral |")
+    add("|---|---|---|---|---|---|")
+    for label, series, sw, track in (
+        ("Daily (17:00 NY)", d1, d1_sw, d1_bias),
+        ("4H (17:00 NY)", h4, h4_sw, h4_bias),
+    ):
+        cnt = Counter(b.name for b in track)
+        n = len(track)
+        add(
+            f"| {label} | {len(series):,} | {len(sw):,} | "
+            f"{cnt['BULLISH'] / n:.1%} | {cnt['BEARISH'] / n:.1%} | {cnt['NEUTRAL'] / n:.1%} |"
+        )
+    add("")
+    add("Neutral is common because the amended definition requires **both** a higher")
+    add("high and a higher low (or both lower). A higher high with a lower low is an")
+    add("expanding range, not a trend. Neutral Daily blocks the trade outright.")
+    add("")
+    gcnt = Counter(g.name for g in flexible)
+    add(
+        f"Combined FLEXIBLE gate over all bars: bullish {gcnt['BULLISH'] / len(flexible):.1%}, "
+        f"bearish {gcnt['BEARISH'] / len(flexible):.1%}, "
+        f"blocked {gcnt['NEUTRAL'] / len(flexible):.1%}."
+    )
+    add("")
+
+    add("## 2. Liquidity sweeps (strict)")
+    add("")
+    in_session = int((smap.name != "").sum())
+    add(
+        f"Bars inside a tracked session: {in_session:,} of {len(smap):,} "
+        f"({in_session / len(smap):.1%}). Only these can produce a sweep."
+    )
+    add("")
+    counts = summarise_sweeps(sweeps)
+    add("| Liquidity source | London | New York | Total |")
+    add("|---|---|---|---|")
+    for src in ("pdh", "pdl", "asia_high", "asia_low"):
+        add(
+            f"| {src} | {counts.get(f'{src}@london_tight', 0):,} | "
+            f"{counts.get(f'{src}@ny_tight', 0):,} | {counts.get(src, 0):,} |"
+        )
+    add(
+        f"| **Total** | {counts.get('london_tight', 0):,} | "
+        f"{counts.get('ny_tight', 0):,} | **{counts.get('total', 0):,}** |"
+    )
+    add("")
+    p = penetration_stats(sweeps)
+    add("How far sweeps actually penetrate (USD), since the brief sets no minimum:")
+    add("")
+    add(
+        f"median ${p['median']:.2f} · 10th percentile ${p['p10']:.2f} · "
+        f"90th percentile ${p['p90']:.2f} · max ${p['max']:.2f} · "
+        f"{p['under_10_cents']:.1%} penetrate less than 10 cents."
+    )
+    add("")
+
+    add("## 3. Displacement")
+    add("")
+    finite = np.isfinite(ratio)
+    disp = finite & (ratio >= 1.5)
+    in_sess = smap.name != ""
+    add(
+        f"Candles meeting the 1.5x average-body rule: {int(disp.sum()):,} of "
+        f"{int(finite.sum()):,} ({disp[finite].mean():.1%}). Inside sessions: "
+        f"{int((disp & in_sess).sum()):,} ({(disp & in_sess).sum() / in_sess.sum():.1%} "
+        "of session bars)."
+    )
+    add("")
+    add("Displacement is not the scarce ingredient — roughly one session bar in three")
+    add("qualifies. What is scarce is a displacement candle that also closes through")
+    add("the reference swing before the session ends.")
+    add("")
+
+    add("## 4. The funnel")
+    add("")
+    add("| Stage | Count | Survives | Per year |")
+    add("|---|---|---|---|")
+    stages = [
+        ("Sweeps detected", len(sweeps), None),
+        ("→ produced an MSS", len(mss), len(sweeps)),
+        ("→ displacement candle left an FVG", len(setups), len(mss)),
+        ("→ passed the HTF gate (FLEXIBLE)", len(gated), len(setups)),
+        ("→ price returned to the entry in time", len(reachable), len(gated)),
+    ]
+    for label, n, prev in stages:
+        pct = "—" if prev is None else f"{n / prev:.0%}" if prev else "—"
+        add(f"| {label} | {n:,} | {pct} | {n / years:.0f} |")
+    add("")
+    add("Where sweeps are lost before an MSS:")
+    add("")
+    add("| Reason | Count |")
+    add("|---|---|")
+    for reason, n in rejection_counts(rejected).items():
+        add(f"| `{reason}` | {n:,} |")
+    add(f"| MSS formed but left no FVG | {no_gap:,} |")
+    add("")
+    rem = np.array([s.expires_at_index - s.index for s in sweeps])
+    add(
+        f"Median bars left in the session when a sweep completes: {int(np.median(rem))} "
+        f"(a London session is only 12 bars long). {(rem < 3).mean():.0%} of sweeps have "
+        "fewer than 3 bars remaining, which is rarely enough for a displacement candle "
+        "to close through the reference swing."
+    )
+    add("")
+
+    add("## 5. Sample size — a problem, stated plainly")
+    add("")
+    add(f"The baseline produces **{len(reachable)} tradeable setups in {years:.1f} years**")
+    add(f"— about **{len(reachable) / years:.0f} per year**.")
+    add("")
+    add("`PREREGISTRATION.md` §5 asks for 400+ trades for initial feasibility and 800+")
+    add("preferred. Extrapolating this rate across development plus validation (~7.8")
+    add(f"years) gives roughly **{len(reachable) / years * 7.8:.0f}** — far below that floor.")
+    add("")
+    add("This is a structural property of the pre-registered baseline, found before any")
+    add("backtest has been run, which is the right time to find it. It is reported here")
+    add("rather than fixed, because the founding brief is explicit: *\"Never force extra")
+    add("trades merely to increase sample.\"* Loosening a rule now, having seen that the")
+    add("strict version yields few setups, is a decision for the user to take knowingly")
+    add("and for this document to record — not one to slip in quietly.")
+    add("")
+    add("For reference, the STRICT HTF gate (a planned WP10 comparison, not the")
+    add(f"baseline) would leave {len(gated_strict):,} setups before reachability — ")
+    add("fewer still, not more.")
+    add("")
+
+    add("## 6. Composition of the surviving setups")
+    add("")
+    for title, group in (("Direction", lambda s: s.direction.name),
+                         ("Session", lambda s: s.mss.sweep.session),
+                         ("Liquidity source", lambda s: s.mss.sweep.level_name)):
+        cnt = Counter(group(s) for s in reachable)
+        add(f"**{title}:** " + " · ".join(f"{k} {v}" for k, v in sorted(cnt.items())))
+        add("")
+    add("Kept separate deliberately — the brief forbids merging the four liquidity")
+    add("sources into one hidden metric, and London must not hide inside New York.")
+    add("")
+
+    add("## 7. Verdict")
+    add("")
+    add("Every detector works, is strictly causal, and is covered by known-answer")
+    add("tests. The feature layer is ready for Work Package 7 (execution and cost")
+    add("model).")
+    add("")
+    add("**Carried forward as an open risk:** at the baseline's setup frequency, Phase 1")
+    add("will not reach the pre-registered sample-size floor. That does not by itself")
+    add("invalidate the research — the brief allows years and regime coverage to")
+    add("substitute for raw count — but any conclusion drawn later must state the")
+    add("sample it rests on, and a null result on ~200 trades is weaker evidence than")
+    add("a null result on 800.")
+
+    (REPO_ROOT / "FEATURES_REPORT.md").write_text("\n".join(L) + "\n")
+
+
+if __name__ == "__main__":
+    main()

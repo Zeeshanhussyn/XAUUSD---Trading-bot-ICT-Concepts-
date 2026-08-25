@@ -14,11 +14,11 @@ no MQL5, no product/dashboard in Phase 1.
 |----|------|--------|
 | 0 | Environment Audit | Done |
 | 1 | Project Scaffold | Done |
-| 2 | Research Design / Preregistration | Done — approved 2026-08-24 |
+| 2 | Research Design / Preregistration | Done — approved 2026-08-24, amended 2026-08-25 (x2) |
 | 3 | Data Acquisition | Done — GitHub source, 2012-2022, 15m base timeframe, data split confirmed |
 | 4 | Data Integrity | Done — EET/EEST timezone finding, 5 timeframes clean |
 | 5 | Backtest Engine | **Done** — see below |
-| 6 | Core Features | Not started |
+| 6 | Core Features | **Done** — see below |
 | 7 | Execution/Cost Model | Not started |
 | 8 | Analysis Tags | Not started |
 | 9 | Baseline Development Backtest | Not started |
@@ -68,6 +68,36 @@ minutes**. The engine's whole-bar validity rule had made 25 minutes work out to 
 validity rather than weaken the fill rule. 25-minute and current-session-only remain WP10
 ablations. Baseline parameters now live in `src/xauusd_research/config.py`.
 
+## Work Package 6 result (2026-08-25)
+Recovered the original 37,443-character master prompt from the session transcript and stored it
+verbatim as `FOUNDING_BRIEF.md` — it had existed only inside a chat session, and a compacted
+summary is not the source text.
+
+**Preregistration amended (pre-backtest):** the brief uses four terms it never defines
+operationally. Each was put to the user as an A/B/C choice and answered: Daily bias "clear" =
+swing structure HH+HL / LH+LL (neutral blocks); MSS reference swing fixed at the sweep; a sweep
+stays live only until the end of its own session; only the MSS displacement candle's own FVG is
+eligible. Every alternative remains a WP10 ablation.
+
+Built `src/xauusd_research/features/` — swings (fractal N=2 carrying an explicit `confirmed_at`
+lag), levels (PDH/PDL and Asia H/L with per-level availability instants), bias, sessions,
+sweeps, structure (displacement + MSS), fvg. 73 new tests (163 total, all passing), including a
+truncation test that recomputes the entire chain on a shortened series and demands identical
+results.
+
+**Major finding — sample size.** The baseline funnel over 5.8 development years:
+5,980 sweeps -> 959 MSS -> 638 FVG setups -> 149 past the HTF gate -> **88 where price actually
+returned to the entry in time** (~15/year). Extrapolated across development plus validation
+that is ~118 trades, against the 400+ floor in PREREGISTRATION.md §5.
+
+Reported, **not fixed** — the brief says "Never force extra trades merely to increase sample",
+so loosening a rule after seeing the count is the user's decision to take knowingly. Awaiting
+that decision. Biggest filter: 4,147 of 5,980 sweeps expire before an MSS, because the median
+sweep completes with only 5 bars left in a 12-bar session. Displacement itself is not scarce
+(34% of session bars qualify).
+
+**Verdict: feature layer ready for WP7; sample-size risk carried forward.**
+
 ## Infrastructure status
 - Cloud research sandbox: Python 3.11.15, Git 2.43.0, pandas/numpy/scipy/matplotlib/pytest/pyarrow installed.
 - Local persistent folder: connected — `C:\Users\AK\Desktop\XAUUSD_Research` on user's Windows PC, kept in sync after every checkpoint.
@@ -75,9 +105,12 @@ ablations. Baseline parameters now live in `src/xauusd_research/config.py`.
 - Cloud sandbox network is restricted to software registries + GitHub only — cannot reach financial data sites or MT5 directly.
 
 ## Next action
-WP6 (Core Features) — not yet started, awaiting user go-ahead + model choice (Sonnet 5 vs
-Opus 5). This is where the actual ICT/SMC definitions get implemented on top of the engine:
-PDH/PDL and Asia High/Low levels, swing fractals (N=2), liquidity sweeps (strict), MSS/CHOCH
-with displacement, and FVG detection — every one strictly causal, each with its own
-known-answer tests. Another core-correctness package; the stronger model is likely warranted
-again.
+**User decision needed first:** whether to accept the baseline's ~15 setups/year and report
+reduced confidence, or amend a baseline rule to reach the pre-registered sample floor (for that
+stated non-performance reason, with the original kept as a mandatory ablation). See
+`FEATURES_REPORT.md` §5 and the open item in `RESEARCH_DECISIONS.md`.
+
+Then WP7 (Execution/Cost Model): spread, commission and slippage as concrete `CostModel`
+implementations behind the interface the engine already exposes, using the generic labelled
+industry-typical assumptions confirmed in WP2 — never presented as the user's actual broker
+facts.

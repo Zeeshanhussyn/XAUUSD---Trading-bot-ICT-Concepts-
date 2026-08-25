@@ -117,9 +117,63 @@ zero.
 `src/xauusd_research/config.py`, each traceable to a line of PREREGISTRATION.md §2. WP6 extends
 that file as each feature is implemented.
 
+## 2026-08-25 — Work Package 6 feature definitions (all confirmed by user before coding)
+
+**Housekeeping first:** the original 37,443-character master prompt was recovered from the
+session transcript and stored verbatim as `FOUNDING_BRIEF.md`. It had lived only inside a chat
+session, and a compacted summary of a brief is not the brief. Anything later claimed to come
+"from the brief" is now checkable against that file. Re-reading it also confirmed the WP5
+50-minute pending-order validity was one of the brief's own three listed variants.
+
+The brief uses four terms without ever defining them operationally. Code cannot be written
+against an undefined term, so each was put to the user as an explicit choice. No backtest had
+been run, so no result could have influenced any answer.
+
+**Q1 — "Daily bias is clear" = Daily swing structure.** Higher-high AND higher-low = bullish;
+lower-high AND lower-low = bearish; anything else neutral, and neutral Daily blocks the trade.
+**Why:** reuses the fractal definition already required elsewhere, so it adds no parameter, and
+it produces a principled "neutral" (an expanding range is genuinely not a trend). Measured
+consequence: Daily is neutral on 39% of development bars, and the combined FLEXIBLE gate blocks
+58% of all bars.
+
+**Q2 — MSS reference swing is fixed at the sweep.** The most recent *confirmed* opposite-side
+swing that already existed when the sweep candle closed; it does not update as new swings form.
+**Why:** keeps the sweep and the structure break part of one event and gives SL Variant B a
+stable invalidation level. A necessary corollary, implemented and counted rather than assumed:
+if price is already past that swing at the sweep, there is nothing to break and the setup is
+rejected (874 of 5,980 sweeps).
+
+**Q3 — A sweep stays live until the end of its own session.** Direct consequence, stated
+explicitly: a sweep occurring outside a tracked session window is not tracked at all, since it
+would have no session in which to expire.
+**Why:** sessions are already part of the strategy, so this adds no parameter. Measured
+consequence: this is the single largest filter in the funnel — 4,147 of 5,980 sweeps expire
+before any MSS, because the median sweep completes with only 5 bars left in a 12-bar session.
+
+**Q4 — Only the FVG centred on the MSS displacement candle is eligible.**
+**Why:** matches the brief's own logic chain (sweep → MSS → displacement → FVG), and keeps the
+entry inside the move that broke structure. Measured consequence: 321 of 959 MSS events left no
+gap at all and produced no setup.
+
+## 2026-08-25 — Work Package 6 finding: the baseline is low-frequency
+
+**Finding:** the pre-registered baseline produces **88 tradeable setups in 5.8 development
+years (~15/year)**. Extrapolated across development plus validation that is ~118, against the
+400+ initial-feasibility floor in PREREGISTRATION.md §5. Full funnel in `FEATURES_REPORT.md`.
+
+**Not acted on.** FOUNDING_BRIEF.md is explicit: *"Never force extra trades merely to increase
+sample."* Loosening a rule now, having just seen that the strict version yields few setups,
+would be a degree of freedom exercised after looking at the data — even though no P/L exists
+yet. It is therefore reported and put to the user as an explicit decision rather than absorbed
+quietly. **Awaiting user decision.**
+
+For reference, the STRICT HTF gate — a planned WP10 comparison — yields fewer setups, not more.
+
 ## Pending decisions (to be resolved before relevant work package)
 
-- None currently open.
+- **WP6/WP9 (open):** how to handle the sample-size shortfall above — accept it and report
+  reduced confidence, or amend a baseline rule for the stated non-performance reason of meeting
+  the pre-registered sample floor, with the original kept as a mandatory ablation.
 
 - WP3 (open): how to handle the 2022-03 → 2026-08 data gap — see next message to user for the
   exact A/B choice (use 2012-2022 as the full working window and holdout, vs. user manually fills
