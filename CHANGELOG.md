@@ -2,6 +2,22 @@
 
 All notable changes to this project are logged here, newest first.
 
+## 2026-08-25 — Work Package 3: Data acquisition (in progress)
+
+- Confirmed the cloud research sandbox cannot reach financial data sites directly (Dukascopy,
+  HistData, Stooq, Yahoo Finance, Hugging Face all unreachable) — only software registries and
+  GitHub are network-reachable.
+- Found and fetched a free bulk source: GitHub `ejtraderLabs/historical-data` — XAUUSD
+  m15/m30/h1/h4/d1, ~2012-05 to 2022-03-04, Apache-2.0 licensed, $0 cost, fully automated.
+  Saved to `data/raw/github_ejtrader_2012_2022/` (gitignored like all of `data/raw/`).
+- User tested Dukascopy's manual export tool: 1-minute exports capped at 1 day per request;
+  1-hour exports capped at ~1-2 months per request. Bulk 5-minute-or-finer multi-year collection
+  by hand is not practical.
+- **Base strategy timeframe changed from 5-minute to 15-minute** (MSS/CHOCH, displacement, FVG).
+  Confirmed with user 2026-08-25. `PREREGISTRATION.md` amended accordingly (pre-backtest, so this
+  is a normal amendment, not a red flag).
+- Open: how to handle the 2022-03 → 2026-08 data gap (GitHub source doesn't cover it).
+
 ## 2026-08-24 — Work Package 2: Preregistration approved
 
 - Wrote `PREREGISTRATION.md` covering baseline configuration, planned one-factor-at-a-time
