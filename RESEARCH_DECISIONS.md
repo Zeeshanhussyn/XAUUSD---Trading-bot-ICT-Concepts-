@@ -56,7 +56,59 @@ UTC timestamps. Getting this wrong would have silently corrupted every downstrea
 **Status:** Implemented as a proper DST-aware `zoneinfo` conversion (`Europe/Bucharest`),
 verified with unit tests, zero ambiguous/nonexistent-time rows found.
 
+## 2026-08-25 — Work Package 5 engine decisions (all confirmed by user before coding)
+
+**Finding (not a decision):** bar timestamps in this source are **open times**, not close
+times. Established by aggregating m15 into h1 in both directions — 2992/2992 bars matched
+the open-time reading, 0/2992 matched close-time. Encoded in `clock.bar_close_time()`; a
+bar is unusable until `open_time + duration`.
+
+**Q1 — Higher-timeframe bars: build both, compare in ablation.**
+Baseline D1/H4 are rebuilt from m15 anchored to the 17:00-NY trading day; the broker's
+native D1/H4 become a WP10 ablation.
+**Why:** the broker's own day rolls at 00:00 EET/EEST, which lands on 18:00 NY rather than
+17:00 NY on 159 of 2532 days (the weeks where US and EU DST dates differ), conflicting with
+the PDH/PDL definition in PREREGISTRATION.md §2. The native daily series also starts
+2012-11-13 against m15's 2012-05-15, which would have silently cost ~6 months of the
+development period. Rebuilding fixes both; keeping the native series as an ablation means
+the difference gets measured rather than assumed.
+**Validation:** on the 2242 days where both definitions coincide, the rebuilt daily bars
+match the broker's own to a maximum OHLC difference of 0.0000.
+
+**Q2 — Gap fills: conservative / pessimistic.**
+A gap through the stop fills at the bar open (full gap taken as loss). A gap through the
+target fills at the target (no gap bonus). A gap through the entry limit fills at the limit
+(no gap bonus).
+**Why:** ambiguity should never flatter the result. Confirmed working on real data — 44 and
+58 losses worse than −1R across the two self-test runs, and zero wins above the target.
+
+**Q3 — Open positions are held to stop or target, with no time limit**, including across
+days and weekends. Session-end and day-end forced closes remain available as WP10 ablations
+via `close_now()`.
+**Why:** simplest rule, and the one most consistent with the fixed 1:2 exit model that
+PREREGISTRATION.md §2 labels BENCHMARK. Note this is what produces the largest gap losses
+(worst observed −4.91R, over a weekend) — that cost is real and is being taken honestly.
+
+**Q4 — Equity curves use fixed risk on INITIAL equity (no compounding).**
+**Why:** keeps the equity curve a faithful rescaling of the R sequence, so edge and
+compounding effects stay separable and drawdowns are not flattered by a good early run.
+R-multiples remain the primary reporting unit regardless. `ruin_point()` reports where an
+account would actually have been wiped out, since a non-compounding curve can otherwise show
+a meaningless negative balance.
+
+**Engine decision (not user-facing at the time, flagged for review):** a resting order is
+eligible to fill during a bar only if it is live for the *whole* bar. The engine never knows
+where inside a bar a level was touched, so it cannot know whether a touch preceded a mid-bar
+expiry — the same no-intrabar-path principle used for stop/target ambiguity. With the
+preregistered 25-minute validity this makes an order live for exactly one 15m bar, where
+PREREGISTRATION.md §2 describes "≈1-2". Both settings are already WP10 ablations and no
+backtest has been run, so this is changeable at zero cost to research integrity. **Awaiting
+user confirmation.**
+
 ## Pending decisions (to be resolved before relevant work package)
+
+- WP5/WP10 (open): whole-bar vs any-overlap pending-order validity — see the engine decision
+  above and `ENGINE_SPEC.md` §5.
 
 - WP3 (open): how to handle the 2022-03 → 2026-08 data gap — see next message to user for the
   exact A/B choice (use 2012-2022 as the full working window and holdout, vs. user manually fills

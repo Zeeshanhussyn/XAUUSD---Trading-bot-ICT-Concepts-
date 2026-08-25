@@ -2,6 +2,40 @@
 
 All notable changes to this project are logged here, newest first.
 
+## 2026-08-25 — Work Package 5: Backtest Engine (done)
+
+- **Critical finding, empirically verified:** the source labels bars by **open time**,
+  not close time. Aggregating m15 into h1 matched the open-time reading on 2992/2992 bars
+  and the close-time reading on 0/2992. Every decision in the project would otherwise have
+  carried a silent 15-minute lookahead. Encoded once, in `clock.bar_close_time()`.
+- **Second cross-check of the WP4 timezone work:** daily bars rebuilt from m15 on the
+  17:00-NY boundary equal the broker's own daily bars with **max difference 0.0000** across
+  OHLC on all 2242 days where the two day definitions coincide. Validates the EET/EEST
+  conversion, the price scaling, the m15 series and the aggregation in one comparison.
+- Built `src/xauusd_research/engine/`: `clock.py` (17:00-NY trading day, session windows,
+  DST-safe wall-clock resolution), `resample.py` (D1/H4 rebuilt from m15 + native loader for
+  the WP10 ablation), `marketview.py` (cursor-bounded causal data access), `orders.py`
+  (order/position model + conservative fill simulator), `costs.py` (WP7 interface,
+  zero-cost placeholder only), `backtester.py` (single forward-pass event loop).
+- Four engine decisions confirmed with the user before any code was written: HTF bars built
+  both ways and compared in ablation; conservative/pessimistic gap fills; positions held to
+  stop or target with no time limit; equity fixed on initial capital, no compounding.
+- `ENGINE_SPEC.md` records every engine rule with its source, written before any strategy
+  exists so no rule can be quietly relaxed later.
+- `scripts/run_engine_selftest.py` writes `ENGINE_SELFTEST_REPORT.md` from the real
+  development period.
+- **83 new tests** (90 total, all passing), including end-to-end scenarios whose answer is
+  known by arithmetic and explicit lookahead traps. Engine runs 230,400 bars in ~3.7s.
+- **Strongest single result:** information-free 1:2 entries over the development period
+  return a 0.3213 / 0.3313 win rate against a theoretical breakeven of 1/3, with zero wins
+  above the planned target and 44/58 real gap losses worse than −1R. The engine does not
+  manufacture edge, never credits gap improvement, and always takes gap damage.
+- **Verdict: proceed to Work Package 6 (core features).**
+- One item left open for the user in `ENGINE_SPEC.md` §5: the whole-bar validity rule makes
+  the preregistered 25-minute pending-order life exactly 1 bar rather than the "≈1-2" the
+  document describes. Both settings are already WP10 ablations and no backtest has run, so
+  changing it costs nothing.
+
 ## 2026-08-25 — Work Package 4: Data Integrity (done)
 
 - **Critical finding, empirically verified:** the GitHub source's raw timestamps are NOT UTC.
