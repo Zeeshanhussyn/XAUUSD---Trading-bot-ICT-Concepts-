@@ -164,16 +164,73 @@ years (~15/year)**. Extrapolated across development plus validation that is ~118
 **Not acted on.** FOUNDING_BRIEF.md is explicit: *"Never force extra trades merely to increase
 sample."* Loosening a rule now, having just seen that the strict version yields few setups,
 would be a degree of freedom exercised after looking at the data — even though no P/L exists
-yet. It is therefore reported and put to the user as an explicit decision rather than absorbed
-quietly. **Awaiting user decision.**
+yet. It was therefore reported and put to the user as an explicit decision rather than absorbed
+quietly.
+
+**User decision, 2026-08-25: keep the baseline exactly as pre-registered.** Nothing is changed
+to raise the trade count. The consequences are accepted knowingly and must be stated in the
+WP15 final report:
+
+- Any conclusion rests on roughly 118 trades across development and validation, not the 400+
+  the pre-registration asks for.
+- A **positive** result on this sample would be meaningful precisely because the sample is
+  small and the rules were fixed in advance — but confidence intervals will be wide and must
+  be shown, not hidden behind point estimates.
+- A **null or negative** result on this sample is weak evidence. It cannot be reported as "the
+  strategy has no edge"; only as "no edge was detectable at this sample size", which is a
+  different and much weaker claim. PREREGISTRATION.md §6 already lists "trade count too low to
+  conclude anything" as a warning criterion, and it is now expected to trigger.
+- The higher-frequency variants (trading-day sweep window, wide sessions, N=3) remain WP10
+  ablations and will be run there as planned comparisons — not as a repair to the baseline.
 
 For reference, the STRICT HTF gate — a planned WP10 comparison — yields fewer setups, not more.
 
+## 2026-08-25 — Work Package 7 cost decisions
+
+**Finding (measured, not a decision): the price series quotes BID.** Established against the
+user's Dukascopy reference files, which label their side: ours sits $0.42 below their ASK
+(Jan 2013, n=525) and within $0.03-$0.12 of their BID (Feb 2013 n=457, Jul 2013 n=524).
+**Why it matters:** every level in the project is derived from this series and is therefore in
+bid terms, so exactly one leg of each round trip transacts at the ask and pays the spread — the
+buy leg. Long pays going in, short coming out. Charging both legs would double the modelled cost;
+charging neither would erase it, and no summary statistic would reveal which error had been made.
+
+**Finding: the implied spread in Jan 2013 was ~$0.41/oz median**, and ~$0.40 inside both the
+London and New York windows. Our trading hours are not cheaper than the rest of the day. That is
+worth stating because the opposite is widely assumed.
+
+**Decision — cost assumptions (user, 2026-08-25):** two generic labelled profiles, Standard
+($0.30/oz spread, no commission) and Raw/ECN ($0.15/oz + $0.07/oz round-trip commission), plus
+the measured 2013 era ($0.42) as a third scenario. Normal slippage $0.10/oz, applied only to
+stops and forced closes. Mandatory 2x stress on the total.
+**Why not the measured figure as baseline:** it comes from 2013 and an ECN-style broker, a
+wide-spread era for gold; applying it across 2012-2022 would overstate cost in the later years.
+**Labelling:** these are assumptions, never presented as the user's broker's terms.
+
+**Decision — co-primary stop-loss baselines (user, 2026-08-25).**
+*What forced it:* SL Variant B — Claude's flagged, never-user-confirmed default — is mechanically
+unsound in combination with the WP6 FVG rule. The eligible gap is created by the same candle that
+broke the reference swing, so the gap sits on the swing: **36 of 149 setups put the entry at or
+beyond the stop**, which cannot be executed. Of the remainder the median stop is $0.81, so a
+$0.30 spread plus $0.10 slippage is ~49% of one R and a 1:2 system would need a ~48% win rate
+merely to break even. Variant A (sweep wick) gives 149/149 valid orders, a $3.85 median stop and
+~10% cost.
+*Chosen resolution:* run **both** as co-primary baselines rather than swapping one default for
+another.
+*Integrity conditions, fixed now:* both declared before any backtest, so this is a pre-registered
+two-arm comparison and not two looks; multiplicity stated in every report; the holdout still spent
+exactly once with both arms inside that single pass; taking only the better development arm to the
+holdout explicitly forbidden; Variant B's unexecutable setups skipped and counted, not dropped.
+
+**Not implemented, deliberately:** the abnormal-spread filter (requires a bar-by-bar spread that
+does not exist in this data — the filter would compare a constant against itself) and the news
+blackout plus news-period slippage (requires point-in-time economic-event data this sandbox cannot
+reach). FOUNDING_BRIEF.md: "If trustworthy point-in-time data cannot be obtained for a particular
+field: DO NOT fabricate it." Both are gaps to restate in the WP15 report, not silent omissions.
+
 ## Pending decisions (to be resolved before relevant work package)
 
-- **WP6/WP9 (open):** how to handle the sample-size shortfall above — accept it and report
-  reduced confidence, or amend a baseline rule for the stated non-performance reason of meeting
-  the pre-registered sample floor, with the original kept as a mandatory ablation.
+- None currently open.
 
 - WP3 (open): how to handle the 2022-03 → 2026-08 data gap — see next message to user for the
   exact A/B choice (use 2012-2022 as the full working window and holdout, vs. user manually fills

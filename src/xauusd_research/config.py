@@ -41,6 +41,20 @@ BASELINE_ATR_PERIOD: Final[int] = 14
 #: Stop-loss buffer as a multiple of ATR(14) on the 15m series.
 BASELINE_SL_BUFFER_ATR_MULTIPLE: Final[float] = 0.1
 
+# --- Stop loss -------------------------------------------------------------
+#
+# CO-PRIMARY baselines (WP7 amendment, 2026-08-25). Both are run and both are
+# reported, always side by side. Variant B alone is mechanically unsound for an
+# FVG entry: the eligible gap is created by the candle that broke the reference
+# swing, so 24% of setups place the entry at or beyond that stop.
+
+#: Beyond the sweep wick. Median stop ~$3.85; every setup produces a valid order.
+SL_VARIANT_A = "sweep_extreme"
+#: Beyond the swing the MSS broke. Median stop ~$0.81; 24% of setups unexecutable.
+SL_VARIANT_B = "mss_invalidation_swing"
+#: Neither is "the" baseline. Selecting one after seeing results is forbidden.
+CO_PRIMARY_SL_VARIANTS: Final[tuple[str, ...]] = (SL_VARIANT_A, SL_VARIANT_B)
+
 # --- Targets and risk ------------------------------------------------------
 
 #: Fixed reward-to-risk of the BENCHMARK exit model (Model 1, full close).
@@ -56,6 +70,43 @@ RISK_PER_TRADE_LEVELS: Final[tuple[float, ...]] = (0.0025, 0.005, 0.01)
 
 #: Starting equity used for every equity-curve illustration.
 INITIAL_EQUITY: Final[float] = 100_000.0
+
+# --- Transaction costs (WP7) ----------------------------------------------
+#
+# LABELLED ASSUMPTIONS, NOT BROKER FACTS. The data source carries no bid/ask,
+# so no spread can be measured from it. FOUNDING_BRIEF.md: "Do not pretend
+# estimated costs are actual broker facts."
+#
+# What IS measured, from the user's Dukascopy reference files:
+#   * the price series is a BID series (it sits $0.42 below Dukascopy ASK in
+#     Jan 2013 and within $0.12 of Dukascopy BID in Feb and Jul 2013), and
+#   * the implied Jan-2013 spread was ~$0.41/oz median, ~$0.40 inside the
+#     London and New York windows — no better in our trading hours than
+#     anywhere else in the day.
+#
+# The 2013 figure comes from a wide-spread era and an ECN-style broker, so it
+# is kept as its own scenario rather than used as the baseline. Values below
+# confirmed by the user 2026-08-25.
+
+#: Standard retail account: wider spread, no separate commission. USD per ounce.
+STANDARD_SPREAD_PER_OZ: Final[float] = 0.30
+STANDARD_COMMISSION_PER_OZ: Final[float] = 0.0
+
+#: Raw/ECN account: tighter spread plus an explicit round-trip commission.
+#: $0.07/oz is ~$7 per 100oz standard lot, round trip.
+RAW_ECN_SPREAD_PER_OZ: Final[float] = 0.15
+RAW_ECN_COMMISSION_PER_OZ: Final[float] = 0.07
+
+#: The 2013-era spread actually measured, kept as a third labelled scenario.
+MEASURED_2013_SPREAD_PER_OZ: Final[float] = 0.42
+MEASURED_2013_COMMISSION_PER_OZ: Final[float] = 0.0
+
+#: Slippage on stop and market exits only — a limit order fills at its price
+#: or not at all, so limits carry none. Always against us.
+NORMAL_SLIPPAGE_PER_OZ: Final[float] = 0.10
+
+#: Mandatory stress multiplier applied to the whole transaction cost (WP11).
+COST_STRESS_MULTIPLIER: Final[float] = 2.0
 
 # --- Sessions --------------------------------------------------------------
 

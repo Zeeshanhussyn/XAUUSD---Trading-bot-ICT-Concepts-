@@ -53,6 +53,45 @@ in `src/xauusd_research/config.py`.
 the WP5 amendment above is one of the three variants the brief itself listed ("current session
 only / 25 minutes / 50 minutes") — not a new invention.
 
+### Amendment — 2026-08-25 (pre-backtest, WP7 cost model)
+
+**Two co-primary baselines, differing only in the stop-loss rule.** Declared here in advance,
+before any backtest of any kind has been run.
+
+*What was found.* Building the cost model required measuring how large the baseline's stops
+actually are. SL Variant B — "beyond the MSS/CHOCH invalidation swing", which §2 below marked as
+**Claude's default, never confirmed by the user** — turns out to be mechanically unsound for an
+FVG entry. The eligible FVG is created by the very displacement candle that broke the reference
+swing, so the gap sits directly on top of that swing:
+
+| | SL Variant B | SL Variant A |
+|---|---|---|
+| Setups producing a valid order | 113 / 149 | **149 / 149** |
+| Median stop distance | $0.81 | $3.85 |
+| Stops under $0.50 | 38% | 0% |
+| Round-trip cost as a share of 1R (standard profile) | 37–49% | 8–10% |
+| Win rate a 1:2 system needs to break even | ~49% | ~36% |
+
+Twenty-four percent of setups place the entry at or beyond the Variant-B stop, which cannot be
+executed at all. That defect is purely mechanical and contains no profit-or-loss information.
+
+*Resolution, chosen by the user 2026-08-25.* Rather than replace one default with another, **both
+stop-loss variants are promoted to co-primary baselines** and reported side by side, always,
+never as "the better one". Consequences, fixed now so they cannot be chosen later:
+
+1. Both arms are declared before any result exists. Running both is therefore a pre-registered
+   two-arm comparison, not two looks at one hypothesis.
+2. **Multiplicity is real and must be stated.** With two primary configurations, the chance that
+   one looks good by luck alone is roughly double that of a single arm. Every headline figure
+   must be reported for both arms together, and any nominal significance interpreted with the
+   two-arm structure in view.
+3. **The holdout is still spent exactly once.** Both arms run inside that single WP14 pass and
+   both results are published. Selecting the better development arm and taking only that one to
+   the holdout is explicitly forbidden — that would reintroduce the selection this amendment
+   exists to prevent.
+4. Variant B setups whose entry lies at or beyond the stop are skipped and **counted** in the
+   results, not silently dropped.
+
 This document is written BEFORE any strategy result exists. It is not to be edited after results
 are seen without recording the change as a new, dated entry in `RESEARCH_DECISIONS.md` and a new
 row in `TRIAL_LOG.csv`. Any post-hoc edit to this file after WP9 has run is itself a red flag for
@@ -99,7 +138,7 @@ what runs first. The user can change any of these before approving this document
 | Confirmation timing | Confirmation candle must **close** before entry becomes eligible; entry starts next candle onward | **default** (matches brief's stated "Primary") — same-candle aggressive variant tested in WP10, built so it cannot use information only available at that candle's close before the close actually happened |
 | Missed entry | PRIMARY: if FVG never retraces, it is a missed setup — no chase | fixed (matches brief's stated "PRIMARY") — market-entry-after-confirmation variant tracked separately |
 | Pending entry validity | Maximum **50 minutes** real time (amended 2026-08-25, see below — was 25 minutes). Under the engine's whole-bar validity rule this leaves an order live for 3 fifteen-minute bars | **default** — 25-minute and current-session-only variants tested in WP10. Cancelled immediately on opposite structure break, sweep-extreme invalidation, or session end (hard rule) |
-| Stop loss | Variant B: beyond MSS/CHOCH invalidation swing | **default** — Variant A (beyond sweep extreme) tested in WP10 |
+| Stop loss | **CO-PRIMARY: both variants are baselines** (WP7 amendment). Variant A = beyond the sweep extreme; Variant B = beyond the MSS/CHOCH invalidation swing. Both run, both reported, always side by side | amended 2026-08-25 — Variant B was Claude's unconfirmed default and is mechanically unsound alone (24% of setups place the entry beyond its stop) |
 | SL buffer | 0.1 × ATR(14), 15m, causal | confirmed by user at 5m; carried forward to 15m per 2026-08-25 amendment |
 | Minimum RR | Fixed target ≥ 1:2 | fixed (from brief) — stricter "nearest opposing PDH/PDL or Asia H/L also allows ≥1:2" variant tested in WP10, using the hierarchy below |
 | Major opposing liquidity hierarchy | Opposite-side PDH/PDL and opposite-side Asia High/Low only, nearest-to-entry-price first. No subjective zones, no "clean path" judgment | confirmed by user |

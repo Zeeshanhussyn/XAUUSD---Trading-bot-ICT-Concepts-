@@ -14,12 +14,12 @@ no MQL5, no product/dashboard in Phase 1.
 |----|------|--------|
 | 0 | Environment Audit | Done |
 | 1 | Project Scaffold | Done |
-| 2 | Research Design / Preregistration | Done — approved 2026-08-24, amended 2026-08-25 (x2) |
+| 2 | Research Design / Preregistration | Done — approved 2026-08-24, amended 2026-08-25 (x4) |
 | 3 | Data Acquisition | Done — GitHub source, 2012-2022, 15m base timeframe, data split confirmed |
 | 4 | Data Integrity | Done — EET/EEST timezone finding, 5 timeframes clean |
 | 5 | Backtest Engine | **Done** — see below |
 | 6 | Core Features | **Done** — see below |
-| 7 | Execution/Cost Model | Not started |
+| 7 | Execution/Cost Model | **Done** — see below |
 | 8 | Analysis Tags | Not started |
 | 9 | Baseline Development Backtest | Not started |
 | 10 | Staged Ablation | Not started |
@@ -98,6 +98,35 @@ sweep completes with only 5 bars left in a 12-bar session. Displacement itself i
 
 **Verdict: feature layer ready for WP7; sample-size risk carried forward.**
 
+## Work Package 7 result (2026-08-25)
+**Measured, not assumed: the price series quotes BID.** Against the user's Dukascopy reference
+files it sits $0.42 below their ASK and within $0.03-$0.12 of their BID. This decides which leg
+pays the spread — exactly one per round trip (long going in, short coming out). Backwards, the
+cost would either double or vanish with nothing to reveal the error.
+
+Implied Jan-2013 spread: median $0.41/oz, and $0.40 inside both trading windows — our hours are
+**not** cheaper than the rest of the day.
+
+Cost profiles (labelled assumptions, user-confirmed): Standard $0.30 spread / no commission;
+Raw/ECN $0.15 + $0.07 round trip; measured-2013 $0.42 as a third scenario. Slippage $0.10 on
+stops and market exits only. Mandatory 2x stress.
+
+**Major finding — the pre-registered stop rule was mechanically unsound.** SL Variant B (Claude's
+flagged, unconfirmed default) puts the entry at or beyond its own stop in **36 of 149 setups**,
+because the eligible FVG is created by the candle that broke that very swing. Of the rest the
+median stop is $0.81, so a $0.30 spread is ~49% of one R and a 1:2 system needs a ~48% win rate
+just to break even. Variant A gives 149/149 valid orders, $3.85 median stop, ~10% cost.
+
+**Preregistration amended:** both stop variants are now **co-primary baselines**, declared before
+any backtest, always reported side by side. Multiplicity stated; holdout still spent once with
+both arms in that single pass; taking only the better arm to the holdout is forbidden.
+
+Not built and not faked: abnormal-spread filter (needs a bar-by-bar spread we lack) and the news
+blackout/slippage (needs point-in-time event data this sandbox cannot reach). Both are gaps to
+restate in WP15.
+
+29 new tests (192 total, all passing). **Verdict: proceed to WP8.**
+
 ## Infrastructure status
 - Cloud research sandbox: Python 3.11.15, Git 2.43.0, pandas/numpy/scipy/matplotlib/pytest/pyarrow installed.
 - Local persistent folder: connected — `C:\Users\AK\Desktop\XAUUSD_Research` on user's Windows PC, kept in sync after every checkpoint.
@@ -105,12 +134,8 @@ sweep completes with only 5 bars left in a 12-bar session. Displacement itself i
 - Cloud sandbox network is restricted to software registries + GitHub only — cannot reach financial data sites or MT5 directly.
 
 ## Next action
-**User decision needed first:** whether to accept the baseline's ~15 setups/year and report
-reduced confidence, or amend a baseline rule to reach the pre-registered sample floor (for that
-stated non-performance reason, with the original kept as a mandatory ablation). See
-`FEATURES_REPORT.md` §5 and the open item in `RESEARCH_DECISIONS.md`.
-
-Then WP7 (Execution/Cost Model): spread, commission and slippage as concrete `CostModel`
-implementations behind the interface the engine already exposes, using the generic labelled
-industry-typical assumptions confirmed in WP2 — never presented as the user's actual broker
-facts.
+WP8 (Analysis Tags) — the brief's non-blocking tags: order block / breaker / mitigation overlap,
+equal highs and lows, previous week high/low, premium-discount, market regime (trending, ranging,
+high/low volatility), liquidity clusters (<=0.10 vs <=0.20 ATR proximity) and sequential
+liquidity events. Every one of these is recorded alongside a trade and **none of them filters or
+blocks a trade in V1** — the brief is explicit about that.

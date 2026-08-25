@@ -2,6 +2,39 @@
 
 All notable changes to this project are logged here, newest first.
 
+## 2026-08-25 — Work Package 7: Execution / Cost Model (done)
+
+- **Measured, not assumed: the price series is a BID series.** Compared against the user's
+  Dukascopy reference files, which state their side: ours sits $0.42 below their ASK
+  (Jan 2013, 525 hourly bars) and within $0.03-$0.12 of their BID (Feb and Jul 2013). This
+  decides which leg of a round trip pays the spread — long pays going in, short pays coming
+  out, exactly one leg either way. Getting it backwards would double the cost or delete it.
+- **Measured the implied spread** for the one month where we hold the ask side: median
+  $0.41/oz, and $0.40 inside both the London and New York windows — our trading hours are
+  not cheaper than the rest of the day, contrary to the usual kill-zone assumption.
+- Cost profiles confirmed by the user as labelled assumptions: Standard $0.30/oz spread and
+  no commission; Raw/ECN $0.15/oz plus $0.07/oz round-trip commission; plus the measured
+  2013 era ($0.42) as a third scenario. Normal slippage $0.10/oz on stops and market exits
+  only — limit orders fill at their price or not at all. Mandatory 2x stress on all of it.
+- Added `features/indicators.py` (Wilder ATR(14), causal) — needed by the SL buffer,
+  displacement Variant B and the FVG size filters.
+- **Major finding — the pre-registered stop rule was mechanically unsound.** Measuring stop
+  sizes showed SL Variant B ("beyond the MSS invalidation swing", which was Claude's flagged
+  unconfirmed default) places the entry at or beyond its own stop in **36 of 149 setups**,
+  because the eligible FVG is created by the candle that broke that very swing. Of the rest,
+  the median stop is $0.81, making a $0.30 spread ~49% of one R and raising the breakeven win
+  rate of a 1:2 system from 33.3% to ~48%. Variant A (sweep wick) gives 149/149 valid orders,
+  a $3.85 median stop and ~10% cost.
+- **PREREGISTRATION.md amended (pre-backtest):** both stop variants promoted to **co-primary
+  baselines**, declared in advance, always reported side by side. Multiplicity is stated
+  explicitly; the holdout is still spent once, with both arms inside that single pass, and
+  taking only the better development arm to the holdout is forbidden.
+- Not implemented, and not faked: the abnormal-spread filter (needs a bar-by-bar spread we do
+  not have) and the news blackout / news slippage (needs point-in-time event data this sandbox
+  cannot reach). Both recorded as gaps to restate in the final report.
+- 29 new tests (192 total, all passing). `scripts/run_cost_model_report.py` writes
+  `COST_MODEL_REPORT.md`. **Verdict: proceed to Work Package 8.**
+
 ## 2026-08-25 — Work Package 6: Core Features (done)
 
 - Recovered the original 37,443-character master prompt from the session transcript and
