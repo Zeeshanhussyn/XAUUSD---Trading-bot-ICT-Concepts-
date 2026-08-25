@@ -15,8 +15,8 @@ no MQL5, no product/dashboard in Phase 1.
 | 0 | Environment Audit | Done |
 | 1 | Project Scaffold | Done — structure/docs created, synced to local folder, pushed to GitHub |
 | 2 | Research Design / Preregistration | **Done** — approved by user 2026-08-24 |
-| 3 | Data Acquisition | In progress |
-| 4 | Data Integrity | Not started |
+| 3 | Data Acquisition | **Done** — GitHub source, 2012-2022, 15m base timeframe, data split confirmed |
+| 4 | Data Integrity | In progress |
 | 5 | Backtest Engine | Not started |
 | 6 | Core Features | Not started |
 | 7 | Execution/Cost Model | Not started |

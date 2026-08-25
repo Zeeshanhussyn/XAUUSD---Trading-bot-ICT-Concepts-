@@ -16,7 +16,9 @@ All notable changes to this project are logged here, newest first.
 - **Base strategy timeframe changed from 5-minute to 15-minute** (MSS/CHOCH, displacement, FVG).
   Confirmed with user 2026-08-25. `PREREGISTRATION.md` amended accordingly (pre-backtest, so this
   is a normal amendment, not a red flag).
-- Open: how to handle the 2022-03 → 2026-08 data gap (GitHub source doesn't cover it).
+- User decided: use the 2012-2022 GitHub window in full rather than manually filling the
+  2022-2026 gap (Option A). Data split confirmed: Development 2012-05-15→2018-03-04, Validation
+  2018-03-04→2020-03-04, Holdout 2020-03-04→2022-03-04. `PREREGISTRATION.md` §3 updated. WP3 done.
 
 ## 2026-08-24 — Work Package 2: Preregistration approved
 

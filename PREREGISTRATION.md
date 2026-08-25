@@ -78,14 +78,19 @@ what runs first. The user can change any of these before approving this document
 | Risk per trade | Results reported primarily in **R-multiples**. Equity-curve sensitivity compared at 0.25% / 0.50% / 1.00% risk/trade. 0.50% is the eventual demo default; 1% is research sensitivity only | fixed (from brief) |
 | Random benchmark | Mandatory, reproducible seeds, matched sessions/trade-count/cost assumptions/risk distribution | fixed (from brief) |
 
-## 3. Data split (exact year boundaries fixed after WP4, once actual clean-data range is known)
+## 3. Data split (confirmed by user 2026-08-25; edges may shift slightly after WP4 integrity check)
 
-- **Development period:** earliest clean years available
-- **Validation / rolling walk-forward period:** middle years
-- **Untouched holdout:** latest 1–2 years — never inspected, never optimized on, until the user
-  gives explicit written approval in WP13, run exactly once in WP14
-- Target: up to 8 clean years total; minimum 5–6 clean years if older data quality is poor. No bad
-  data used merely to inflate sample size.
+- **Development period:** 2012-05-15 → 2018-03-04 (~5.8 years)
+- **Validation / rolling walk-forward period:** 2018-03-04 → 2020-03-04 (~2 years)
+- **Untouched holdout:** 2020-03-04 → 2022-03-04 (~2 years) — never inspected, never optimized on,
+  until the user gives explicit written approval in WP13, run exactly once in WP14
+- Full window: ~9.6 clean years (2012-05-15 to 2022-03-04), sourced from
+  `data/raw/github_ejtrader_2012_2022/`. This exceeds the ≥5-6 year minimum and the up-to-8-year
+  target. Per user decision 2026-08-25, this window is used in full in place of live 2022-2026
+  data (which is not freely obtainable in bulk) — the holdout therefore reflects 2020-2022 market
+  conditions, not the current (2026) regime. This tradeoff is logged here and must be restated
+  plainly in the WP15 final report.
+- No bad data used merely to inflate sample size — WP4 may trim edges if quality requires it.
 - No random shuffling of time-series data at any stage.
 
 ## 4. Planned comparisons (staged, one-factor-at-a-time from the baseline above — no grid search)
