@@ -45,6 +45,17 @@ finalizing the data split (see open question below).
 **Status:** Data fetched and saved to `data/raw/github_ejtrader_2012_2022/` (2026-08-25), not yet
 cleaned/validated (WP4).
 
+## 2026-08-25 — Work Package 4 finding: raw data timezone
+
+**Finding:** The GitHub source's raw `Date` column is EET/EEST broker-server time (UTC+2
+winter / UTC+3 summer), not UTC as might be assumed. Determined empirically (not guessed) by
+cross-correlating against user-downloaded Dukascopy `Etc/UTC` reference data for both a winter
+and a summer month — see `DATA_INTEGRITY_REPORT.md` for the full correlation results.
+**Why this matters:** every session/PDH-PDL/DST calculation in this project depends on correct
+UTC timestamps. Getting this wrong would have silently corrupted every downstream result.
+**Status:** Implemented as a proper DST-aware `zoneinfo` conversion (`Europe/Bucharest`),
+verified with unit tests, zero ambiguous/nonexistent-time rows found.
+
 ## Pending decisions (to be resolved before relevant work package)
 
 - WP3 (open): how to handle the 2022-03 → 2026-08 data gap — see next message to user for the

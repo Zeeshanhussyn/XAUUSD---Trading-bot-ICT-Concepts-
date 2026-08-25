@@ -2,6 +2,27 @@
 
 All notable changes to this project are logged here, newest first.
 
+## 2026-08-25 — Work Package 4: Data Integrity (done)
+
+- **Critical finding, empirically verified:** the GitHub source's raw timestamps are NOT UTC.
+  Cross-correlated against user-downloaded Dukascopy `Etc/UTC` reference data (Jan 2013 and
+  Jul 2013): winter offset = raw−2h (corr 0.99983), summer offset = raw−3h (corr 0.99996).
+  This is the standard EET/EEST broker-server-time convention. Implemented as a proper
+  DST-aware conversion via `Europe/Bucharest` (zoneinfo), not a naive fixed offset. Verified
+  zero raw rows fall in a nonexistent/ambiguous DST-transition local time, so conversion is
+  exact.
+- Built `src/xauusd_research/data/loaders.py` (raw CSV → price-corrected, UTC-indexed
+  DataFrame) and `src/xauusd_research/data/integrity.py` (gap/duplicate/OHLC-sanity checks).
+- `scripts/run_data_integrity.py` loads all 5 timeframes, runs checks, trims to the confirmed
+  data split, saves cleaned Parquet to `data/processed/` (gitignored, regenerable), and writes
+  `DATA_INTEGRITY_REPORT.md`.
+- 7 unit tests added (`tests/unit/test_data_loaders.py`), all passing — timezone calibration,
+  price-scale sanity, DST edge-case verification, no-lookahead column check.
+- Result: no duplicate timestamps, no bad OHLC relationships, no non-positive prices, no nulls
+  in any of the 5 timeframes. Two flagged "extreme" daily bars correspond to genuine documented
+  gold events (2013-04-15 crash, 2016-06-23 Brexit) — corroborates the series is real/correctly
+  dated. **Verdict: data quality sufficient to proceed to Work Package 5.**
+
 ## 2026-08-25 — Work Package 3: Data acquisition (in progress)
 
 - Confirmed the cloud research sandbox cannot reach financial data sites directly (Dukascopy,

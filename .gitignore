@@ -2,6 +2,10 @@
 data/raw/*
 !data/raw/.gitkeep
 
+# Cleaned/processed data (regenerable from data/raw via scripts/run_data_integrity.py)
+data/processed/*
+!data/processed/.gitkeep
+
 # Python
 __pycache__/
 *.py[cod]
